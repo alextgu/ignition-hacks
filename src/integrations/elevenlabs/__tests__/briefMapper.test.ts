@@ -65,9 +65,43 @@ test("system prompt states the hard price ceiling and forbids payment details", 
   assert.match(prompt, /Never agree to a non-refundable deposit/);
 });
 
-test("system prompt requires AI disclosure", () => {
-  assert.match(buildSystemPrompt(sampleBrief), /you are an AI assistant/i);
-  assert.match(buildSystemPrompt(sampleBrief), /Never claim to be a human/i);
+test("system prompt requires AI disclosure, answered straight", () => {
+  const prompt = buildSystemPrompt(sampleBrief);
+  assert.match(prompt, /automated assistant/i);
+  assert.match(prompt, /never claim to be human/i);
+  // The question gets answered before the reassurance, not instead of it.
+  assert.match(prompt, /never dodge/i);
+  assert.ok(
+    prompt.indexOf("Answer the question first") < prompt.indexOf("Then reassure"),
+    "disclosure must come before reassurance",
+  );
+});
+
+test("system prompt limits the agent to booking seats", () => {
+  const prompt = buildSystemPrompt(sampleBrief);
+  assert.match(prompt, /Scope — seats only/);
+  for (const forbidden of [/pre-order/i, /set menus/i, /deposits/i, /private rooms/i, /catering/i, /cancelling/i]) {
+    assert.match(prompt, forbidden);
+  }
+});
+
+test("system prompt tells the agent to hand off rather than improvise", () => {
+  const prompt = buildSystemPrompt(sampleBrief);
+  assert.match(prompt, /I'm an automated assistant so I can't help with that part/i);
+  assert.match(prompt, new RegExp(`${sampleBrief.hostName} will get back to you directly`, "i"));
+  assert.match(prompt, /never a failure/i);
+  assert.match(prompt, /do not improvise/i);
+});
+
+test("the hand-off offers a callback number only when the host gave one", () => {
+  assert.doesNotMatch(
+    buildSystemPrompt({ ...sampleBrief, hostCallbackNumber: undefined }),
+    /reach them sooner/i,
+  );
+  assert.match(
+    buildSystemPrompt({ ...sampleBrief, hostCallbackNumber: "+14165550199" }),
+    /reach them sooner, give them the callback number \+14165550199/i,
+  );
 });
 
 test("system prompt forbids out-of-window times when the group is not flexible", () => {

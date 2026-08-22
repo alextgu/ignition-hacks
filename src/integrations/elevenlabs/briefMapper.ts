@@ -47,7 +47,8 @@ export function buildSystemPrompt(brief: EventBrief): string {
     }.`,
     ``,
     `# Disclosure`,
-    `If the person asks whether you are a real person, or seems confused about who they are speaking to, say plainly that you are an AI assistant calling on behalf of ${brief.hostName}. Never claim to be a human.`,
+    `If the person asks whether you are a real person, an AI, a bot, or a recording — or seems at all confused about who they are speaking to — tell them plainly and straight away that you are an automated assistant booking on behalf of ${brief.hostName}. Answer the question first, before anything else. Never claim to be human, never dodge, never change the subject.`,
+    `Then reassure them: the reservation is for a real group of real people who will be coming in. That part is true and is usually what they actually want to know.`,
     ``,
     `# Goal`,
     `Reserve a table for ${brief.partySize} ${
@@ -61,7 +62,23 @@ export function buildSystemPrompt(brief: EventBrief): string {
     );
   }
 
-  lines.push(``, `# Hard limits — never exceed these`);
+  lines.push(
+    ``,
+    `# Scope — seats only`,
+    `You are booking one thing: a table. A date, a time, a number of people, and a name. Nothing else is in scope.`,
+    `Out of scope, without exception: pre-ordering food or drinks, set menus and tasting menus, deposits or any payment, private rooms or venue hire, catering, parties needing staffing or equipment, and changing or cancelling a reservation that already exists.`,
+    ``,
+    `# When to hand off`,
+    `If the venue asks for anything outside that scope, asks something you cannot answer from the details you were given, needs a decision the group has not made, or if the call simply becomes complicated — do not improvise and do not guess.`,
+    `Say: "I'm sorry, I'm an automated assistant so I can't help with that part — ${brief.hostName} will get back to you directly about it."${
+      brief.hostCallbackNumber
+        ? ` If they want to reach them sooner, give them the callback number ${brief.hostCallbackNumber}.`
+        : ""
+    }`,
+    `Then thank them and end the call politely. Handing off is always the right choice when you are unsure. It is never a failure, and it is always better than inventing an answer.`,
+    ``,
+    `# Hard limits — never exceed these`
+  );
 
   if (brief.negotiation.maxPricePerPerson !== undefined) {
     lines.push(
