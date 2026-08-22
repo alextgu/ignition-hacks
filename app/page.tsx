@@ -1,4 +1,5 @@
 import { CreateEventForm } from "./create-event-form";
+import { PipelineSlideshow } from "./pipeline/pipeline-slideshow";
 import Link from "next/link";
 
 export default function Home() {
@@ -47,6 +48,8 @@ export default function Home() {
           </div>
         </aside>
       </section>
+
+      <PipelineSlideshow />
     </main>
   );
 }
