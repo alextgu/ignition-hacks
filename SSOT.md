@@ -5,8 +5,8 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** — World Labs prompt corrected from a
-  first-person interior to Plan-it's miniature floating planet composition
+- Last updated: **2026-08-22** — Plan-it's miniature floating planet prompt
+  deployed and visually verified with a real World Labs generation
 
 ---
 
@@ -41,8 +41,8 @@ contracts.
 | Base44-safe guest ID + CORS | coordination spine | **Done** | 2026-08-22 |
 | Unified + named friend links | coordination spine | **Backend deployed; Base44 preview verified** — public UI publish pending | 2026-08-22 |
 | Twilio/ElevenLabs live call path | coordination spine | **Done** — dry-run + live/mock dispatch + status poll | 2026-08-22 |
-| World Labs integration | integrations agent | **Planet prompt ready to publish** — text/image/multi-image and render assets retained; live visual recheck pending | 2026-08-22 |
-| World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Deployed + live verified** — real panorama completed in 338s; Base44 preview iframe handoff verified | 2026-08-22 |
+| World Labs integration | integrations agent | **Deployed + live verified** — miniature event-planetoid composition; text/image/multi-image and render assets retained | 2026-08-22 |
+| World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Deployed + live verified** — corrected planet panorama completed in 326s; Base44 preview iframe handoff verified | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
 | Finished Base44 UI | Base44 / Simon | **Done** — published with live API adapter | 2026-08-22 |
 | In-app world viewer (SparkJS, base + walk cameras) | unassigned | **Not started** — dependency-free panorama canvas ships instead; splat URLs already served | 2026-08-22 |
@@ -70,6 +70,10 @@ contracts.
 - The production Sites runtime now has the World Labs key. Events created
   after the 2026-08-22 environment deployment use the real adapter; older
   fallback events remain fallback by the one-generation-per-event guarantee.
+- New World Labs events use a miniature event-planetoid composition: an
+  elevated view of a circular floating surface with the venue, seating,
+  lighting and location cues arranged as small landmarks. The production
+  `Sunset Picnic Planet` validation produced this view without an interior.
 - Open `/world/{slug}` — the embeddable canvas. It shows the generated
   panorama once Marble finishes, the deterministic planet until then, and
   one light per RSVP in every state.
@@ -422,15 +426,17 @@ with zero credentials because the mock adapter already simulates a call over
 
 ### World Labs app wiring — what is true after 2026-08-22
 
-- **Planet composition regression fixed in source.** The earlier production
+- **Planet composition regression fixed and live verified.** The earlier production
   credit exposed that the old mapper explicitly requested a photographic
   restaurant interior, so Marble correctly produced the wrong product visual.
   The mapper now asks for a complete miniature floating event planetoid from
   an elevated three-quarter view, puts event landmarks on its upper surface,
   uses a handcrafted editorial style, and explicitly excludes interior,
   first-person and close-up compositions. Prompt regression tests cover the
-  camera, curved silhouette, landmark mapping and exclusions. A fresh live
-  credit is still required after deployment because completed worlds are
+  camera, curved silhouette, landmark mapping and exclusions. A fresh
+  production generation completed in 326 seconds and visual inspection
+  confirmed a circular event diorama with table, lanterns and skyline cues,
+  with no room or first-person interior. Completed older worlds remain
   immutable by the one-generation rule.
 - **Verified live with one credit.** A fresh production event completed the
   full Marble path in 338 seconds: generate → operation stored → throttled
@@ -481,7 +487,8 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
-| 2026-08-22 | integrations | Replaced World Labs' explicit photographic-interior prompt with the approved Plan-it composition: complete miniature floating event planet, elevated three-quarter camera, event landmarks on the upper hemisphere, tactile clay/painted-wood style, and explicit first-person/interior exclusions. Added five prompt regressions and updated the existing mapping expectations; live visual recheck pending deployment. |
+| 2026-08-22 | coordination spine | Published Sites version 6 and spent one credit on `plan-it-demo-sunset-picnic-planet-121e48b5`. It completed in 326 seconds with `live: true`; the panorama and caption show a handcrafted circular floating event diorama with table, lanterns and Toronto cues on its surface, and visual inspection confirmed there is no interior-room composition. |
+| 2026-08-22 | integrations | Replaced World Labs' explicit photographic-interior prompt with the approved Plan-it composition: complete miniature floating event planet, elevated three-quarter camera, event landmarks on the upper hemisphere, tactile clay/painted-wood style, and explicit first-person/interior exclusions. Added five prompt regressions and updated the existing mapping expectations; subsequently live-verified in Sites version 6. |
 | 2026-08-22 | coordination spine | Spent one World Labs credit on the production demo event `plan-it-demo-rooftop-planet-party-d05d0a02`. The real job completed in 338 seconds with `live: true`, a panorama, Marble viewer link, and caption; no duplicate generation was started. |
 | 2026-08-22 | coordination spine | Stored `WORLDLABS_API_KEY` only in the Sites runtime, set the hosted timeout to 20 seconds, and redeployed the existing validated version with environment revision 4. Base44 receives only `worldUrl`; no credential was copied into Base44. No live Marble credit was used. |
 | 2026-08-22 | coordination spine | Published Sites version 5 and verified the Base44 editor handoff end to end: create returns `worldUrl`; create success, guest, and host Planet reuse the same app-owned iframe; one RSVP adds state without regenerating; fixtures remain labelled fallbacks. No live Marble credit was used because no hosted key is configured. |
