@@ -19,7 +19,7 @@
  * demoable. See docs/elevenlabs-setup.md.
  */
 
-import { loadConfig, shouldUseRealAdapter, describeConfig, missingCredentials } from "./config.ts";
+import { loadConfig, shouldUseRealAdapter, describeConfig, missingCredentials, type EnvLike } from "./config.ts";
 import { RealBookingAgentAdapter } from "./elevenLabsAdapter.ts";
 import { MockBookingAgentAdapter } from "./mockAdapter.ts";
 import { readEnv } from "../shared/encoding.ts";

@@ -4,7 +4,7 @@
 
 **Goal:** Build a deployed SnapPlan foundation where a host creates an event, receives separate guest and management links, and guests persist one editable response per browser identity.
 
-**Architecture:** Use the Sites vinext starter with App Router pages and route handlers, Cloudflare D1 through Drizzle for durable event/attendee state, and a small service layer that is testable without the runtime. Keep the World Labs integration behind the contract in `project.md`; this slice renders a deterministic spatial fallback and does not edit the other agent's integration directory.
+**Architecture:** Use the Sites vinext starter with App Router route handlers, Cloudflare D1 through Drizzle for durable event/attendee state, and a small service layer that is testable without the runtime. Pages and forms are temporary functional harnesses only; Base44 will own the finished UI. Keep the World Labs integration behind the contract in `project.md` and do not edit the other agent's integration directory.
 
 **Tech Stack:** TypeScript 5.9, React 19, vinext, Cloudflare Workers/D1, Drizzle ORM, Node test runner, CSS.
 
@@ -20,6 +20,7 @@
 - Event creation and RSVP must remain usable without World Labs.
 - Do not edit `src/integrations/worldlabs/**`; it is owned by the other agent.
 - Do not add Supabase or another credentialed persistence service in this slice.
+- Keep all pages and forms visually temporary; Base44 will replace the finished UI.
 - Do not implement ElevenLabs, venue booking, seating, authentication, payments, or full trip planning in this slice.
 - Use prepared D1 statements through Drizzle and generate an inspected migration for every schema change.
 - Never commit API keys, database credentials, or generated source-write credentials.
@@ -450,7 +451,7 @@ Expected: FAIL because the handler does not exist.
 
 The route must derive the origin from `new URL(request.url).origin`, never from a hard-coded deployment hostname. It must return a generic `Unable to create the event right now.` message for unexpected errors without exposing stack traces.
 
-Convert the creation shell into a client form that:
+Convert the creation shell into a temporary client form that:
 
 - starts with two possible date/time inputs and permits up to four;
 - keeps title optional in the UI and derives it from the first short phrase of the description when blank;
@@ -522,7 +523,7 @@ Use `PUT`, not `POST`, because the endpoint represents one guest's response for 
 
 - [ ] **Step 4: Implement the public event page and editable response form**
 
-The page must show event title, description, location, price range, candidate times, expected group size, and the deterministic spatial fallback. The client form loads the current response, labels returning state as “Your response,” and uses “Save my response” for both create and update.
+The temporary page must show event title, description, location, price range, candidate times, and expected group size. The client form loads the current response, labels returning state as “Your response,” and uses “Save my response” for both create and update. Do not add visual polish intended for the final Base44 UI.
 
 Use `generateMetadata` with the event record as the authoritative source. Set event-specific title/description. Use `worldPreviewImageUrl` only when present; explicitly clear inherited Open Graph and X images when it is null.
 
@@ -589,7 +590,7 @@ Expected: FAIL because the summary helper and management route do not exist.
 
 - [ ] **Step 3: Implement the host page and refresh endpoint**
 
-The host page must show:
+The temporary host page must show:
 
 - public guest link with copy control;
 - expected group size and response count;
@@ -604,7 +605,7 @@ The dashboard may poll its JSON endpoint every 10 seconds and must show distinct
 
 Document local development, D1 migration generation, environment expectations, and the external World Labs ownership boundary in `README.md`. Ensure starter metadata/assets and `codex-preview` markers are gone.
 
-Freeze the root social-preview brief and generate exactly one SnapPlan social card through the image-generation skill. Inspect its text; save a valid result as `public/og.png`. Use it only for the root/non-detail route. Event detail routes must use their record image or no image.
+Do not generate a social card or polished host UI in this slice; Base44 will own the finished presentation. Keep event-specific text metadata and use a World Labs preview image only when the event record contains one.
 
 - [ ] **Step 5: Run complete verification**
 

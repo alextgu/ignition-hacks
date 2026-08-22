@@ -18,6 +18,14 @@ export type ElevenLabsConfig = {
   agentId: string | undefined;
   /** Imported Twilio phone number id from the ElevenLabs dashboard. */
   agentPhoneNumberId: string | undefined;
+  /** Shared secret for verifying post-call webhooks. */
+  webhookSecret: string | undefined;
+  /** E.164 test destination used by dry-run / harness booking routes. */
+  testToNumber: string | undefined;
+  /** Twilio Account SID — used to import a caller number into ElevenLabs. */
+  twilioSid: string | undefined;
+  /** Twilio Auth Token or API key secret — import into ElevenLabs Telephony. */
+  twilioApiKey: string | undefined;
   /** API base URL. Overridable for tests. */
   baseUrl: string;
   /** Per-HTTP-call timeout in milliseconds. */
@@ -74,6 +82,13 @@ export function loadConfig(env: EnvLike = readEnv()): ElevenLabsConfig {
       "ELEVENLABS_AGENT_PHONE_NUMBER_ID",
       "ELEVENLABS_PHONE_NUMBER_ID",
     ]),
+    webhookSecret: env.ELEVENLABS_WEBHOOK_SECRET?.trim() || undefined,
+    testToNumber: firstSet(env, [
+      "ELEVENLABS_TEST_TO_NUMBER",
+      "ELEVENLABS_TEST_DESTINATION",
+    ]),
+    twilioSid: env.TWILIO_SID?.trim() || undefined,
+    twilioApiKey: firstSet(env, ["TWILIO_API_KEY", "TWILIO_AUTH_TOKEN"]),
     baseUrl: env.ELEVENLABS_BASE_URL?.trim() || DEFAULT_BASE_URL,
     timeoutMs: parsePositiveInt(env.ELEVENLABS_TIMEOUT_MS, DEFAULT_TIMEOUT_MS),
     usePromptOverride: parseBoolean(env.ELEVENLABS_USE_PROMPT_OVERRIDE, true),
@@ -112,6 +127,9 @@ export function describeConfig(config: ElevenLabsConfig): Record<string, unknown
     apiKeyConfigured: Boolean(config.apiKey),
     agentIdConfigured: Boolean(config.agentId),
     agentPhoneNumberIdConfigured: Boolean(config.agentPhoneNumberId),
+    webhookSecretConfigured: Boolean(config.webhookSecret),
+    testToNumberConfigured: Boolean(config.testToNumber),
+    twilioCredentialsConfigured: Boolean(config.twilioSid && config.twilioApiKey),
     baseUrl: config.baseUrl,
     timeoutMs: config.timeoutMs,
     usePromptOverride: config.usePromptOverride,

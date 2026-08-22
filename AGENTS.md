@@ -3,6 +3,10 @@
 Read this file and `SSOT.md` **before** doing anything else. `project.md` is
 the product spec and does not change; `SSOT.md` is the live build state.
 
+**Sites coordination spine note:** for this hackathon deployment repo, prefer
+working directly on `main` unless the user explicitly asks for a branch or
+worktree. Preserve concurrent changes from other agents before editing.
+
 ---
 
 ## Rule 0 — Update SSOT.md. Always.
