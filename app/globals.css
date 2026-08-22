@@ -379,3 +379,70 @@ input:focus, textarea:focus, .money-input:focus-within {
   .field-wide { grid-column: 1 / -1; }
   .world-card { border-radius: 20px; }
 }
+
+.temporary-page {
+  width: min(720px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 3rem 0 5rem;
+}
+
+.temporary-page h1 {
+  font-size: clamp(2.6rem, 7vw, 5rem);
+}
+
+.temporary-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin: 2rem 0;
+}
+
+.temporary-details div,
+.temporary-form {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--card);
+}
+
+.temporary-details dt,
+.temporary-form legend {
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.temporary-details dd {
+  margin: 0.35rem 0 0;
+}
+
+.temporary-form {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.temporary-form h2,
+.temporary-form fieldset {
+  margin: 0;
+}
+
+.temporary-form fieldset {
+  display: grid;
+  gap: 0.5rem;
+  border: 0;
+  padding: 0;
+}
+
+.temporary-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.temporary-choice input {
+  width: auto;
+}
+
+@media (max-width: 560px) {
+  .temporary-details { grid-template-columns: 1fr; }
+}
