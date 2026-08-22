@@ -32,37 +32,23 @@ project.
 
 ## What it does
 
-A host types one vague sentence: *"a cozy birthday dinner in Toronto."*
+In a traditional group chat, people don't respond, cancel last minute, and
+make you feel like the only person who wants the plan to succeed. Plan-it
+makes planning events incredibly simple and fun.
 
-1. **It builds a proposal.** From that sentence plus a few taps — rough area,
-   group size, two or three possible nights, a price range — Plan-it creates
-   an event with two links: a public one to drop in the group chat, and a
-   private host link.
-2. **Guests answer in fifteen seconds.** Name, tap the times that work, and
-   one of three buttons on the price: **Works / Flexible / Too much.** No
-   account, no login. Reopening the link lets them edit their answer, and the
-   same browser can't accidentally double-respond.
-3. **The event becomes a place.** The host's description is turned into an
-   explorable 3D scene by World Labs' Marble model — a room with the right
-   light and the right number of seats — which fills in with guests as they
-   join.
-4. **It reads the room.** The host dashboard shows availability overlap, price
-   comfort, and one plain-language verdict: *"Friday works for five of six,
-   nobody flagged the price — this group is ready."*
-5. **Then it makes the call.** The host taps **Call venue**, and an ElevenLabs
-   voice agent phones the restaurant, asks for the table, handles
-   counter-offers, mentions the group's dietary needs, and reads the booking
-   back to confirm — all inside limits the host set. Everyone watching the
-   link sees the call unfold live, line by line, on their phone.
-6. **You get a pass.** Once it's booked, the scene becomes the group's ticket:
-   the confirmed time, who's coming, and a calendar file that actually lands
-   in your phone's calendar.
-
-The thing we care most about: **it never claims a booking that didn't
-happen.** If the venue was ambiguous, or the agent hit a limit it wasn't
-allowed to cross, it says "needs your attention" — never "confirmed."
-
----
+1. **Make the plan.** Go to the admin page and fill in the details. An
+   interactive planit forms, making the plan.
+2. **Send one link.** Send the invite link to all your friends. They get all
+   the details in one place, while your planit updates live.
+3. **Launch.** Once your planit is ready, the admin can continue to launch.
+   An orchestration of agents books the event, then sends the schedules,
+   itinerary and costs for each individual.
+4. **Fall back if it stalls.** For plans that don't get past the planning
+   stage, planit has fallback loops to modify events to cater to the user's
+   needs.
+5. **Keep it.** Once the event is in action, each user can add photos and
+   details to the planit — a final planit artifact for the group to reflect
+   on!
 
 ## How we built it
 
