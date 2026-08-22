@@ -58,6 +58,28 @@ contracts.
 - Verify `POST /api/webhooks/elevenlabs` HMAC signatures when configured.
 - Run integration mocks with zero credentials via `src/integrations/**`.
 
+### Production backend connectivity audit (2026-08-22)
+
+The published Base44 UI calls the Sites backend directly; there is no Base44
+proxy, duplicate database, or hidden persistence layer. A fresh production
+transaction verified this complete path:
+
+`Base44 origin -> Worker CORS -> API route -> event service -> D1 repository`
+
+- `POST /api/events` returned `201` and persisted the event.
+- `GET /api/events/{slug}/rsvp` returned public event data without the private
+  management token.
+- `PUT /api/events/{slug}/rsvp` persisted one attendee under the browser guest
+  ID.
+- `GET /api/manage/{token}` returned that attendee and the updated consensus
+  summary without echoing the token.
+- The published Base44 origin received the configured CORS response headers.
+
+This audit covers the currently live coordination slice. It intentionally does
+not claim that sponsor integrations are routed yet: `/api/manage/{token}/book`
+is still a dry-run/readiness wireframe, the ElevenLabs webhook verifies but does
+not persist outcomes, and World Labs generation is not invoked by an app route.
+
 ---
 
 ## 2. Module ownership
