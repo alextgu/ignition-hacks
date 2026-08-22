@@ -2,11 +2,16 @@
  * Environment-driven configuration for the World Labs integration.
  *
  * Every value here is read lazily (not at module load time) so that tests
- * can set `process.env` before calling `loadConfig()` without needing to
+ * can set the environment before calling `loadConfig()` without needing to
  * re-import the module. No secret is ever logged: `describeConfig` below
  * exists specifically so callers can log/debug configuration state without
  * risking printing the API key.
  */
+
+import { readEnv } from "../shared/encoding.ts";
+
+/** Anything key-value that config can be read from. Avoids depending on Node types. */
+export type EnvLike = Record<string, string | undefined>;
 
 export type WorldLabsConfig = {
   /** Secret API key. Required for the real adapter; absent -> mock is used. */
@@ -36,8 +41,8 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-/** Reads World Labs configuration from `process.env`. Never throws. */
-export function loadConfig(env: NodeJS.ProcessEnv = process.env): WorldLabsConfig {
+/** Reads World Labs configuration from the environment. Never throws. */
+export function loadConfig(env: EnvLike = readEnv()): WorldLabsConfig {
   return {
     apiKey: env.WORLDLABS_API_KEY?.trim() || undefined,
     baseUrl: env.WORLDLABS_BASE_URL?.trim() || DEFAULT_BASE_URL,

@@ -22,6 +22,7 @@
 import { loadConfig, shouldUseRealAdapter, describeConfig, missingCredentials } from "./config.ts";
 import { RealBookingAgentAdapter } from "./elevenLabsAdapter.ts";
 import { MockBookingAgentAdapter } from "./mockAdapter.ts";
+import { readEnv } from "../shared/encoding.ts";
 import type {
   BookingAgentAdapter,
   BookingCallResult,
@@ -53,7 +54,7 @@ let cachedAdapter: BookingAgentAdapter | undefined;
 
 /** Builds a fresh adapter from the given environment. Exposed for tests. */
 export function createBookingAgentAdapter(
-  env: NodeJS.ProcessEnv = process.env
+  env: EnvLike = readEnv()
 ): BookingAgentAdapter {
   const config = loadConfig(env);
 
@@ -65,7 +66,7 @@ export function createBookingAgentAdapter(
   return new MockBookingAgentAdapter(forcedOutcome ? { forcedOutcome } : {});
 }
 
-/** Process-wide singleton, selected from `process.env` on first use. */
+/** Process-wide singleton, selected from the environment on first use. */
 export function getBookingAgentAdapter(): BookingAgentAdapter {
   if (!cachedAdapter) {
     cachedAdapter = createBookingAgentAdapter();
@@ -80,7 +81,7 @@ export function resetBookingAgentAdapterForTests(): void {
 
 /** Safe-to-log summary of how the booking agent is configured (no secrets). */
 export function describeBookingAgentConfig(
-  env: NodeJS.ProcessEnv = process.env
+  env: EnvLike = readEnv()
 ): Record<string, unknown> {
   return describeConfig(loadConfig(env));
 }
@@ -90,13 +91,13 @@ export function describeBookingAgentConfig(
  * booking action honestly ("Call venue" vs "Simulate call") — it should
  * never change whether the flow works.
  */
-export function isLiveCallingConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
+export function isLiveCallingConfigured(env: EnvLike = readEnv()): boolean {
   return shouldUseRealAdapter(loadConfig(env));
 }
 
 /** Env vars still needed before real calls can be placed. */
 export function missingBookingAgentCredentials(
-  env: NodeJS.ProcessEnv = process.env
+  env: EnvLike = readEnv()
 ): string[] {
   return missingCredentials(loadConfig(env));
 }

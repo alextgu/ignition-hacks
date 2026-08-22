@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
 import type { WorldSeed, WorldResult, WorldLabsAdapter } from "./types.ts";
+import { toBase64, toBase64Url, fromBase64Url, stableHash } from "../shared/encoding.ts";
 
 /**
  * Deterministic, fully offline mock/fallback adapter.
@@ -36,16 +36,13 @@ export class MockWorldLabsAdapter implements WorldLabsAdapter {
 const EXTERNAL_ID_PREFIX = "mock:";
 
 function encodeExternalId(seed: WorldSeed): string {
-  return `${EXTERNAL_ID_PREFIX}${Buffer.from(JSON.stringify(seed), "utf8").toString("base64url")}`;
+  return `${EXTERNAL_ID_PREFIX}${toBase64Url(JSON.stringify(seed))}`;
 }
 
 function decodeExternalId(externalId: string): WorldSeed | null {
   if (!externalId.startsWith(EXTERNAL_ID_PREFIX)) return null;
   try {
-    const json = Buffer.from(
-      externalId.slice(EXTERNAL_ID_PREFIX.length),
-      "base64url"
-    ).toString("utf8");
+    const json = fromBase64Url(externalId.slice(EXTERNAL_ID_PREFIX.length));
     const parsed = JSON.parse(json);
     if (typeof parsed !== "object" || parsed === null) return null;
     return parsed as WorldSeed;
@@ -55,7 +52,7 @@ function decodeExternalId(externalId: string): WorldSeed | null {
 }
 
 function buildMockResult(seed: WorldSeed): WorldResult {
-  const hash = createHash("sha256").update(JSON.stringify(seed)).digest("hex");
+  const hash = stableHash(JSON.stringify(seed));
   const previewImageUrl = buildPreviewDataUri(seed, hash);
   const embedUrl = buildEmbedDataUri(seed, hash, previewImageUrl);
 
@@ -102,7 +99,7 @@ function buildPreviewDataUri(seed: WorldSeed, hash: string): string {
     )} · ${escapeXml(seed.timeCharacter || "")}</text>
   </svg>`;
 
-  return `data:image/svg+xml;base64,${Buffer.from(svg, "utf8").toString("base64")}`;
+  return `data:image/svg+xml;base64,${toBase64(svg)}`;
 }
 
 function buildEmbedDataUri(seed: WorldSeed, hash: string, previewImageUrl: string): string {
@@ -146,7 +143,7 @@ function buildEmbedDataUri(seed: WorldSeed, hash: string, previewImageUrl: strin
   </body>
 </html>`;
 
-  return `data:text/html;base64,${Buffer.from(html, "utf8").toString("base64")}`;
+  return `data:text/html;base64,${toBase64(html)}`;
 }
 
 function escapeXml(value: string): string {

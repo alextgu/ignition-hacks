@@ -9,29 +9,35 @@ work — see `AGENTS.md` Rule 0.**
 
 ---
 
-## 0. OPEN DECISION — Base44 vs the hand-built app
+## 0. Base44 is the app layer. The integrations are reused, not rebuilt.
 
-**This needs settling before more app work happens, by Simon + codex.**
+**Settled 2026-08-22.** Confirmed with Simon: the repo attached to the working
+session *is* the whole codebase. There is no separate hand-built app — no
+`package.json`, no routes, no DB anywhere. Base44 builds the app layer.
 
-We are starting a Base44 build (prompts in `docs/base44/`). Base44 generates
-the entire app — entities, routes, UI — which is the same territory the
-coordination-spine agent owns. Two coherent options:
+An earlier version of this section speculated that codex had app work in
+progress elsewhere. That was wrong, and it was wrong for a specific reason
+worth recording: **this environment cannot reach the git remote.** Every
+`git fetch` fails with `Could not read from remote repository`, so
+`origin/main` reads as `2c41876` regardless of what has actually been pushed.
+Anything about the remote's real state has to come from a human, not from
+`git` in this session.
 
-- **Base44 replaces the hand-built app.** Codex stops on
-  scaffolding/DB/routes and moves to Base44 prompt review + demo polish. The
-  `src/integrations/**` modules become reference implementations, and their
-  verified API contracts get carried into Base44 backend functions.
-- **Base44 is a parallel track.** Then neither track finishes. Not
-  recommended.
+### What this means for the two tracks
 
-Until this is decided, **do not start new app-layer work in either place.**
-Recommendation: go all-in on Base44 — it's the fastest path to acceptance
-criteria 1–5, which currently block everything else.
+- **App layer (entities, pages, UI, quorum):** built in Base44 from the
+  prompts in `docs/base44/`. Nothing to rebuild — none of it existed.
+- **Integrations:** the 16 files under `src/integrations/**` are **reused
+  verbatim**. They were made runtime-agnostic on 2026-08-22 (no `Buffer`,
+  no `node:crypto`, no `process.env` — only `fetch`, `TextEncoder`,
+  `btoa`/`atob`, `AbortController`), so they run unchanged on Base44's Deno
+  runtime. All 94 tests still pass. `docs/base44/port/integration-bundle.md`
+  is those files, generated from the real sources, ready to paste.
 
-Port note: Base44 backend functions run **Deno**. The existing TS modules use
-`node:crypto` and `Buffer`, which Deno supports via explicit `node:`
-specifiers (`import { Buffer } from "node:buffer"`). The port is mechanical;
-the contracts are the valuable part.
+Prompt 2 was rewritten to wire these in rather than have Base44 write its own
+adapters. Do not let any agent or builder regenerate World Labs or ElevenLabs
+client code — the contracts in these modules are verified against current
+vendor docs, and a rewrite loses that.
 
 ---
 
@@ -39,24 +45,24 @@ the contracts are the valuable part.
 
 | Area | Owner | Status | Updated |
 |---|---|---|---|
-| Project scaffolding, `package.json`, build/test runner | coordination spine (codex) | **Not present on `main`** | 2026-08-22 |
-| Persistence / data model (Event, Attendee) | coordination spine (codex) | **Not present on `main`** | 2026-08-22 |
-| Host creation flow (`/`) | coordination spine (codex) | **Not present on `main`** | 2026-08-22 |
-| Guest page + RSVP (`/e/{slug}`) | coordination spine (codex) | **Not present on `main`** | 2026-08-22 |
-| Host dashboard (`/manage/{token}`) | coordination spine (codex) | **Not present on `main`** | 2026-08-22 |
-| Guest identity / duplicate prevention | coordination spine (codex) | **Not present on `main`** | 2026-08-22 |
-| World Labs integration | integrations agent | **Done** — real + mock, 29 tests green | 2026-08-22 |
-| ElevenLabs booking agent | integrations agent | **Done** — real + mock, 65 tests green | 2026-08-22 |
+| App layer (scaffolding, routes, DB, UI) | **Base44** | **Prompts ready** — build not started | 2026-08-22 |
+| Persistence / data model (Event, Attendee) | **Base44** (prompt 1) | **Prompts ready** | 2026-08-22 |
+| Host creation flow (`/`) | **Base44** (prompt 1) | **Prompts ready** | 2026-08-22 |
+| Guest page + RSVP (`/e/{slug}`) | **Base44** (prompt 1) | **Prompts ready** | 2026-08-22 |
+| Host dashboard (`/manage/{token}`) | **Base44** (prompt 1) | **Prompts ready** | 2026-08-22 |
+| Guest identity / duplicate prevention | **Base44** (prompt 1) | **Prompts ready** | 2026-08-22 |
+| World Labs integration | integrations agent | **Done** — real + mock, runtime-agnostic, 29 tests green | 2026-08-22 |
+| ElevenLabs booking agent | integrations agent | **Done** — real + mock, runtime-agnostic, 65 tests green | 2026-08-22 |
 | Spatial-art UI (scene panel, guest overlays) | unassigned | **Not started** | 2026-08-22 |
 | Ready-to-plan → booking handoff UI | unassigned | **Not started** | 2026-08-22 |
 | Base44 build prompts (4 staged) | integrations agent | **Done** — ready to paste | 2026-08-22 |
 | Base44 app build | Simon (on platform) | **Not started** | 2026-08-22 |
 | Landing / demo site | Simon (on platform) | **Not started** | 2026-08-22 |
 
-> Coordination-spine rows say "not present on `main`" because nothing for
-> them has landed on `main` yet. Codex may well have work in progress
-> elsewhere — **status unknown to this agent.** Codex: please update these
-> rows when you land.
+> **This session cannot reach the git remote** (`git fetch` fails), so it
+> can never confirm what has been pushed. Treat every remote claim here as
+> human-supplied. Confirmed 2026-08-22: the attached folder is the whole
+> codebase.
 
 ### What a human can actually do right now
 
@@ -229,10 +235,11 @@ started until 1–5 work.
 ## 6. Known gaps, risks, and decisions to make
 
 ### Blocking
-- **No scaffolding on `main`.** No `package.json`, no framework, no test
-  script. Until this lands, the integration modules can only be run via
-  `node --experimental-strip-types --test` directly.
-- **No `.env.example`.** Coordination spine should create it from §4.
+- **Nothing.** The app layer is Base44's job and the prompts are ready. The
+  integrations are done and reusable as-is.
+- No `package.json` in this repo, by design now — it holds the integration
+  modules, their tests, and the docs. Tests run directly:
+  `node --experimental-strip-types --test src/integrations/**/__tests__/*.test.ts`.
 
 ### Needs a decision
 - **World Labs iframe embedding is unverified.** The docs don't document an
@@ -308,6 +315,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | integrations | Made `src/integrations/**` runtime-agnostic (dropped `Buffer`/`node:crypto`/`process.env` for web standards) so Base44's Deno runtime reuses them verbatim; 94 tests still green. Rewrote prompt 2 to wire them in instead of rebuilding. Added `port/integration-bundle.md`. Settled §0 after confirming the attached folder is the whole codebase. |
 | 2026-08-22 | integrations | Base44 track: 4 staged build prompts in `docs/base44/` with verified vendor API contracts embedded. Verified Base44 capabilities; cut Wallet passes (cert blocker) and payment splitting (non-goal); flagged `waitUntil()` misuse. Raised the Base44-vs-hand-built decision as §0. |
 | 2026-08-22 | integrations | ElevenLabs booking agent: contract, brief→call-script mapper, real adapter, deterministic simulated call, 65 tests, setup doc. Extracted `shared/httpJson.ts`. Added `SSOT.md` + `AGENTS.md`. |
 | 2026-08-22 | integrations | World Labs: contract, prompt mapper, real adapter (Marble World API), deterministic mock, 29 tests, setup doc. |

@@ -6,6 +6,11 @@
  * state without risking printing the API key.
  */
 
+import { readEnv } from "../shared/encoding.ts";
+
+/** Anything key-value that config can be read from. Avoids depending on Node types. */
+export type EnvLike = Record<string, string | undefined>;
+
 export type ElevenLabsConfig = {
   /** Secret API key (`xi-api-key`). Absent -> the mock adapter is used. */
   apiKey: string | undefined;
@@ -51,7 +56,7 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-export function loadConfig(env: NodeJS.ProcessEnv = process.env): ElevenLabsConfig {
+export function loadConfig(env: EnvLike = readEnv()): ElevenLabsConfig {
   return {
     apiKey: env.ELEVENLABS_API_KEY?.trim() || undefined,
     agentId: env.ELEVENLABS_AGENT_ID?.trim() || undefined,

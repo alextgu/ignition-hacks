@@ -98,17 +98,20 @@ Pick one and write it into `SSOT.md`. My read: if you're going Base44, go
 all in — it's the faster path to criteria 1–5, which are the ones currently
 blocking everything.
 
-### What happens to the TypeScript modules already in this repo
+### The TypeScript modules already in this repo are reused, not rebuilt
 
-They port, with a small change. Base44 backend functions run **Deno**, which
-supports `node:` specifiers, so `node:crypto` and `Buffer` work — but the
-import lines need to be explicit (`import { Buffer } from "node:buffer"`).
+The 16 files under `src/integrations/**` have been made **runtime-agnostic** —
+no `Buffer`, no `node:crypto`, no `process.env`, only web standards. They run
+unchanged on Base44's Deno runtime, and all 94 tests still pass.
 
-More useful than the code itself: **the verified API contracts**. AI builders
-hallucinate third-party endpoints constantly. Prompt 2 hands Base44 the
-exact endpoints, headers, payload fields, and status enums, all verified
-against current vendor docs. That's the part worth copying over, and it's why
-prompt 2 is written the way it is.
+`port/integration-bundle.md` is those files, generated from the real sources
+so it can't drift, ready to paste. Prompt 2 then adds only the thin Base44
+layer: four backend functions that read secrets, call the adapters, and write
+to entities.
+
+Nothing about either vendor's API gets rebuilt or re-guessed. That matters
+because AI builders hallucinate third-party endpoints constantly, and these
+contracts are verified against current vendor docs.
 
 ## How to use these prompts
 
@@ -118,7 +121,7 @@ between each. One mega-prompt produces mush; staged prompts produce an app.
 | # | File | Builds |
 |---|---|---|
 | 1 | `prompt-1-foundation.md` | Entities, create flow, guest RSVP, host dashboard, quorum |
-| 2 | `prompt-2-integrations.md` | World Labs + ElevenLabs backend functions with verified contracts |
+| 2 | `port/integration-bundle.md`, then `prompt-2-integrations.md` | Reuses the **existing tested modules** — paste the bundle, then the thin wiring layer |
 | 3 | `prompt-3-telemetry-and-pass.md` | Live call telemetry stream, web pass, `.ics` download |
 | 4 | `prompt-4-landing-site.md` | Separate marketing/demo site |
 

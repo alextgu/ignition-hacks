@@ -6,6 +6,7 @@ import type {
   TranscriptLine,
 } from "./types.ts";
 import { formatIsoForSpeech } from "./briefMapper.ts";
+import { toBase64Url, fromBase64Url } from "../shared/encoding.ts";
 
 /**
  * Deterministic, fully offline booking-agent mock.
@@ -108,16 +109,13 @@ type DecodedId = { brief: EventBrief; startedAtMs: number };
 
 function encodeExternalId(brief: EventBrief, startedAtMs: number): string {
   const payload = JSON.stringify({ brief, startedAtMs });
-  return `${EXTERNAL_ID_PREFIX}${Buffer.from(payload, "utf8").toString("base64url")}`;
+  return `${EXTERNAL_ID_PREFIX}${toBase64Url(payload)}`;
 }
 
 function decodeExternalId(externalId: string): DecodedId | null {
   if (!externalId.startsWith(EXTERNAL_ID_PREFIX)) return null;
   try {
-    const json = Buffer.from(
-      externalId.slice(EXTERNAL_ID_PREFIX.length),
-      "base64url"
-    ).toString("utf8");
+    const json = fromBase64Url(externalId.slice(EXTERNAL_ID_PREFIX.length));
     const parsed = JSON.parse(json);
     if (
       typeof parsed !== "object" ||
