@@ -11,6 +11,13 @@ interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
   PLANIT_ALLOWED_ORIGINS?: string;
+  ELEVENLABS_API_KEY?: string;
+  ELEVENLABS_AGENT_ID?: string;
+  ELEVENLABS_PHONE_NUMBER_ID?: string;
+  ELEVENLABS_WEBHOOK_SECRET?: string;
+  ELEVENLABS_TEST_TO_NUMBER?: string;
+  TWILIO_SID?: string;
+  TWILIO_API_KEY?: string;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {

@@ -149,9 +149,13 @@ Secrets live only in local `.env` and hosted runtime configuration.
 
 - ElevenLabs API key: present locally; not committed.
 - ElevenLabs agent ID: created, configured, and saved locally.
-- ElevenLabs caller phone-number ID: none are connected to the account.
-- ElevenLabs webhook secret: not created yet.
+- ElevenLabs caller phone-number ID: may be empty until Twilio is linked in
+  ElevenLabs Telephony; local `.env` may already hold a placeholder.
+- ElevenLabs webhook secret: optional until post-call webhooks are enabled.
 - Test destination number: present locally in E.164 format; not committed.
+- Twilio Account SID (`TWILIO_SID`) and Auth Token / API key secret
+  (`TWILIO_API_KEY`): present locally for importing the caller number into
+  ElevenLabs; SnapPlan still places outbound calls only through ElevenLabs.
 - World Labs key: present locally under `WORLD_LABS_KEY`; the World Labs
   adapter must normalize this noncanonical alias or migrate it to
   `WLT_API_KEY`.
@@ -192,8 +196,10 @@ Secrets live only in local `.env` and hosted runtime configuration.
 - [ ] Event lock-in and booking brief.
 - [ ] Booking-attempt persistence.
 - [x] ElevenLabs venue-booking agent configuration.
-- [ ] Connected ElevenLabs/Twilio caller number.
-- [ ] Signed ElevenLabs webhook handling.
+- [x] Twilio/ElevenLabs outbound call wireframe (dry-run default).
+- [ ] Connected ElevenLabs/Twilio caller number (import Twilio into ElevenLabs).
+- [x] Signed ElevenLabs webhook verification stub.
+- [ ] Booking-attempt persistence after webhook events.
 - [ ] Test phone call and captured outcome.
 - [ ] Complete judged-demo rehearsal.
 
@@ -215,3 +221,5 @@ Secrets live only in local `.env` and hosted runtime configuration.
   Lantern Diorama visual system.
 - Renamed the product to Plan-it and implemented the Base44-safe guest ID,
   restricted CORS boundary, and public guest-event API response.
+- Added Twilio env placeholders and an ElevenLabs outbound-call wireframe with
+  dry-run booking and HMAC webhook verification stubs.

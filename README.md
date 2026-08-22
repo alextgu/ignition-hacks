@@ -82,6 +82,21 @@ The response includes the event, public `guestUrl`, and secret `manageUrl`.
 
 The response contains the public event fields, attendees, guest URL, availability totals, and price-comfort totals. It does not echo the management token.
 
+### Booking call wireframe (dry run by default)
+
+`POST /api/manage/{managementToken}/book`
+
+```json
+{
+  "live": false,
+  "toNumber": "+15551234567"
+}
+```
+
+Defaults to a dry run that never calls ElevenLabs. Live calling requires Twilio credentials imported into ElevenLabs Telephony, plus `ELEVENLABS_PHONE_NUMBER_ID`, and `{ "live": true }`.
+
+`POST /api/webhooks/elevenlabs` verifies the `ElevenLabs-Signature` HMAC header. Booking-attempt persistence is not wired yet.
+
 ## Temporary routes
 
 - `/` — event creation harness
