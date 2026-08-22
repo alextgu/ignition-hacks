@@ -5,9 +5,9 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** — Base44 is republished at its renamed public
-  URL with clickable, live-updating planet covers; Sites CORS follows both the
-  old and renamed origins
+- Last updated: **2026-08-22** — fixed and republished the collapsed large
+  planet layouts; the generated World Labs scene is visible and opens in the
+  production Base44 hero and evolution demo
 
 ---
 
@@ -505,6 +505,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | Base44 / coordination spine | Fixed the missing production World Labs display at its layout source: widthless Framer Motion wrappers caused both large `PlanetWorldFrame` instances to collapse to 0px even though the SVG and world URL were healthy. Added `w-full min-w-0` only to the large wrappers in `src/pages/Landing.jsx` and `src/components/DemoStepper.jsx`, then republished. Production verification measured 340px/300px planet covers, 0 iframes before interaction, exactly 1 after `Explore planet`, and a visibly rendered generated World Labs scene. Small pipeline planets, APIs, polling, event data, prompts, and credentials were unchanged. |
 | 2026-08-22 | Base44 / coordination spine | Republished the live-count planet-cover fix. Base44 renamed the public app to `plan-it-ignition-hacks.base44.app`; added that origin to the existing Sites CORS allowlist, redeployed validated Sites version 6 with environment revision 5, and verified the production guest route loads `2 in orbit` / `Gathering`. The previous public and preview origins remain allowed for compatibility. |
 | 2026-08-22 | Base44 / coordination spine | Changed World Labs presentation in the Base44 editor to a two-state live planet cover: event title/stage/attendee orbit first, iframe only after `Explore planet`, and `Back to planet` unmounts it. Added 5-second visible-tab polling for real guest/manage data plus an immediate post-RSVP refresh, while leaving the Sites iframe's own lantern polling and immutable World Labs world intact. Editor behavior checks verified 0 → 1 → 0 iframes and correct event-owned URLs; automated tests could not run because the Base44 project has no test runner. The later publish entry records production rollout. |
 | 2026-08-22 | Base44 / coordination spine | Replaced fixture/sample planet photos in the Base44 editor with the verified `Sunset Picnic Planet` iframe on the landing hero, evolution demo, and pre-submit create preview. Preserved event-owned dynamic worlds and the lightweight fallback. Editor verification covered `/`, `/create`, the corrected guest route, and a fixture route with no console errors or credential exposure. The later publish entry records production rollout. |
