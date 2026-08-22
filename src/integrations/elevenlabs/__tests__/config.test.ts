@@ -69,3 +69,18 @@ test("describeConfig never leaks the API key", () => {
   assert.doesNotMatch(summary, /super-secret/);
   assert.match(summary, /"apiKeyConfigured":true/);
 });
+
+test("accepts ELEVENLABS_PHONE_NUMBER_ID as an alias", () => {
+  const config = loadConfig({ ...fullEnv, ELEVENLABS_AGENT_PHONE_NUMBER_ID: "", ELEVENLABS_PHONE_NUMBER_ID: "p2" });
+  assert.equal(config.agentPhoneNumberId, "p2");
+  assert.equal(shouldUseRealAdapter(config), true);
+});
+
+test("canonical ELEVENLABS_AGENT_PHONE_NUMBER_ID wins over the alias", () => {
+  const config = loadConfig({
+    ...fullEnv,
+    ELEVENLABS_AGENT_PHONE_NUMBER_ID: "canonical",
+    ELEVENLABS_PHONE_NUMBER_ID: "alias",
+  });
+  assert.equal(config.agentPhoneNumberId, "canonical");
+});

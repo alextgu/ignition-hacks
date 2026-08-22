@@ -30,6 +30,15 @@ const DEFAULT_BASE_URL = "https://api.worldlabs.ai";
 const DEFAULT_MODEL = "marble-1.1";
 const DEFAULT_TIMEOUT_MS = 15_000;
 
+/** Returns the first non-empty value among `names`, trimmed. */
+function firstSet(env: EnvLike, names: string[]): string | undefined {
+  for (const name of names) {
+    const value = env[name]?.trim();
+    if (value) return value;
+  }
+  return undefined;
+}
+
 function parseBoolean(value: string | undefined): boolean {
   if (!value) return false;
   return ["1", "true", "yes", "on"].includes(value.trim().toLowerCase());
@@ -44,7 +53,10 @@ function parsePositiveInt(value: string | undefined, fallback: number): number {
 /** Reads World Labs configuration from the environment. Never throws. */
 export function loadConfig(env: EnvLike = readEnv()): WorldLabsConfig {
   return {
-    apiKey: env.WORLDLABS_API_KEY?.trim() || undefined,
+    // Aliases: the team's .env.example uses WLT_API_KEY (matching the
+    // WLT-Api-Key header) and WORLD_LABS_API_KEY. Accept all three so a
+    // correctly-filled .env never silently falls through to the mock.
+    apiKey: firstSet(env, ["WORLDLABS_API_KEY", "WLT_API_KEY", "WORLD_LABS_API_KEY"]),
     baseUrl: env.WORLDLABS_BASE_URL?.trim() || DEFAULT_BASE_URL,
     model: env.WORLDLABS_MODEL?.trim() || DEFAULT_MODEL,
     timeoutMs: parsePositiveInt(env.WORLDLABS_TIMEOUT_MS, DEFAULT_TIMEOUT_MS),

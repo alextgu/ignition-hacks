@@ -45,6 +45,15 @@ export type ElevenLabsConfig = {
 const DEFAULT_BASE_URL = "https://api.elevenlabs.io";
 const DEFAULT_TIMEOUT_MS = 15_000;
 
+/** Returns the first non-empty value among `names`, trimmed. */
+function firstSet(env: EnvLike, names: string[]): string | undefined {
+  for (const name of names) {
+    const value = env[name]?.trim();
+    if (value) return value;
+  }
+  return undefined;
+}
+
 function parseBoolean(value: string | undefined, fallback = false): boolean {
   if (value === undefined || value.trim() === "") return fallback;
   return ["1", "true", "yes", "on"].includes(value.trim().toLowerCase());
@@ -60,7 +69,11 @@ export function loadConfig(env: EnvLike = readEnv()): ElevenLabsConfig {
   return {
     apiKey: env.ELEVENLABS_API_KEY?.trim() || undefined,
     agentId: env.ELEVENLABS_AGENT_ID?.trim() || undefined,
-    agentPhoneNumberId: env.ELEVENLABS_AGENT_PHONE_NUMBER_ID?.trim() || undefined,
+    // Alias: the team's .env.example uses ELEVENLABS_PHONE_NUMBER_ID.
+    agentPhoneNumberId: firstSet(env, [
+      "ELEVENLABS_AGENT_PHONE_NUMBER_ID",
+      "ELEVENLABS_PHONE_NUMBER_ID",
+    ]),
     baseUrl: env.ELEVENLABS_BASE_URL?.trim() || DEFAULT_BASE_URL,
     timeoutMs: parsePositiveInt(env.ELEVENLABS_TIMEOUT_MS, DEFAULT_TIMEOUT_MS),
     usePromptOverride: parseBoolean(env.ELEVENLABS_USE_PROMPT_OVERRIDE, true),

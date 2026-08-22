@@ -43,3 +43,20 @@ test("describeConfig never leaks the raw API key", () => {
   assert.doesNotMatch(summary, /super-secret/);
   assert.match(summary, /"apiKeyConfigured":true/);
 });
+
+test("accepts WLT_API_KEY and WORLD_LABS_API_KEY as aliases", () => {
+  // The team's .env.example uses these names; a mismatch would silently
+  // fall through to the mock with real credentials sitting right there.
+  assert.equal(loadConfig({ WLT_API_KEY: "k1" }).apiKey, "k1");
+  assert.equal(loadConfig({ WORLD_LABS_API_KEY: "k2" }).apiKey, "k2");
+  assert.equal(shouldUseRealAdapter(loadConfig({ WLT_API_KEY: "k" })), true);
+});
+
+test("canonical WORLDLABS_API_KEY wins over the aliases", () => {
+  const config = loadConfig({
+    WORLDLABS_API_KEY: "canonical",
+    WLT_API_KEY: "alias",
+    WORLD_LABS_API_KEY: "alias2",
+  });
+  assert.equal(config.apiKey, "canonical");
+});
