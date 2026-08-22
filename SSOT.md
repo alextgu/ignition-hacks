@@ -5,7 +5,7 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** by coordination spine (Twilio wireframe merge)
+- Last updated: **2026-08-22** by Plan-it Base44 live integration
 
 ---
 
@@ -20,8 +20,10 @@ work — see `AGENTS.md` Rule 0.**
 2. **Integrations modules** under `src/integrations/**` — World Labs +
    ElevenLabs real/mock adapters, reused by Sites routes and pasteable into
    Base44 (`docs/base44/port/integration-bundle.md`).
-3. **Base44 finished UI** — owns the polished host/guest/manage experience via
-   `docs/base44/` prompts. Temporary Sites pages are harnesses only.
+3. **Base44 finished UI (published)** — owns the polished host/guest/manage
+   experience and calls the Sites API through the shared `planitApi` adapter:
+   `https://valiant-sync-orbit-plan.base44.app`. Temporary Sites pages are
+   harnesses only.
 
 Do not regenerate World Labs or ElevenLabs client code. Extend the existing
 contracts.
@@ -39,14 +41,18 @@ contracts.
 | Twilio env + dry-run book / webhook routes | coordination spine | **Wireframe done** — dry-run default | 2026-08-22 |
 | World Labs integration | integrations agent | **Done** — real + mock | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
-| Finished Base44 UI | Base44 / Simon | **Prompts ready** | 2026-08-22 |
+| Finished Base44 UI | Base44 / Simon | **Done** — published with live API adapter | 2026-08-22 |
 | Connected Twilio caller number in ElevenLabs | human + ElevenLabs | **Blocked** until number import | 2026-08-22 |
 | Event lock-in + booking-attempt persistence | coordination spine | **Not started** | 2026-08-22 |
 
 ### What a human can actually do right now
 
 - Create an event, share guest/manage links, collect RSVPs, view consensus on
-  the deployed Sites harness.
+  the published Plan-it UI or deployed Sites harness.
+- Use distinct guest and host/admin routes at
+  `https://valiant-sync-orbit-plan.base44.app`; new events persist to D1.
+- Reopen an RSVP on the same browser to update the same attendee rather than
+  create a duplicate.
 - Dry-run `POST /api/manage/{token}/book` (never places a live call by default).
 - Verify `POST /api/webhooks/elevenlabs` HMAC signatures when configured.
 - Run integration mocks with zero credentials via `src/integrations/**`.
@@ -164,6 +170,10 @@ Usage notes for the app:
 Nothing is required to run the app — every integration falls back to its
 mock. `.env.example` documents both Sites and integration variables.
 
+The Sites deployment sets `PLANIT_ALLOWED_ORIGINS` to the published Base44
+origin plus its editor preview origins. Base44 sends `X-SnapPlan-Guest-Id` for
+guest identity; it does not depend on cross-site cookies.
+
 ### World Labs
 
 | Variable | Required | Default | Purpose |
@@ -201,18 +211,18 @@ falls back to the mock rather than failing at call time.
 
 | # | Criterion | State |
 |---|---|---|
-| 1 | Host creates an event from a vague idea + constraints | ✅ Sites harness |
-| 2 | Host receives separate guest and management links | ✅ Sites harness |
-| 3 | Multiple guests on different browsers submit availability + price | ✅ Sites harness |
-| 4 | Same browser can't create duplicate attendees | ✅ Sites harness |
-| 5 | Host sees a clear consensus summary | ✅ Sites harness |
-| 6 | Recognizable spatial-art experience with dependable fallback | 🟡 **integration done**, needs UI |
-| 7 | Ready-to-plan state with booking/seating/requirements actions | 🟡 **booking integration done**, needs UI |
+| 1 | Host creates an event from a vague idea + constraints | ✅ Base44 + Sites |
+| 2 | Host receives separate guest and management links | ✅ Base44 + Sites |
+| 3 | Multiple guests on different browsers submit availability + price | ✅ Base44 + Sites |
+| 4 | Same browser can't create duplicate attendees | ✅ Base44 + Sites |
+| 5 | Host sees a clear consensus summary | ✅ Base44 + Sites |
+| 6 | Recognizable spatial-art experience with dependable fallback | ✅ Planetoid fallback; World Labs integration ready |
+| 7 | Ready-to-plan state with booking/seating/requirements actions | ✅ Honest pending/dry-run UI |
 | 8 | Shared link has event-specific preview text and imagery | ❌ needs app (`previewImageUrl` is ready to use) |
 
-**Critical path to a demo: the coordination spine.** Both sponsor
-integrations are done and cannot block anything. Nothing else should be
-started until 1–5 work.
+**Critical path to a demo:** event lock-in, durable booking attempts, and a
+connected ElevenLabs caller number. The complete create → RSVP → admin story
+is already live and verified.
 
 ---
 
