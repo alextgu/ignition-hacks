@@ -5,9 +5,9 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** — fixed and republished the collapsed large
-  planet layouts; the generated World Labs scene is visible and opens in the
-  production Base44 hero and evolution demo
+- Last updated: **2026-08-22** — restored the original public Base44 URL and
+  republished the large-planet layout fix; the generated World Labs scene is
+  visible and opens in production
 
 ---
 
@@ -24,7 +24,7 @@ work — see `AGENTS.md` Rule 0.**
    Base44 (`docs/base44/port/integration-bundle.md`).
 3. **Base44 finished UI (published)** — owns the polished host/guest/manage
    experience and calls the Sites API through the shared `planitApi` adapter:
-   `https://plan-it-ignition-hacks.base44.app`. Temporary Sites pages are
+   `https://valiant-sync-orbit-plan.base44.app`. Temporary Sites pages are
    harnesses only.
 
 Do not regenerate World Labs or ElevenLabs client code. Extend the existing
@@ -56,7 +56,7 @@ contracts.
 - Create an event, share guest/manage links, collect RSVPs, view consensus on
   the published Plan-it UI or deployed Sites harness.
 - Use distinct guest and host/admin routes at
-  `https://plan-it-ignition-hacks.base44.app`; new events persist to D1.
+  `https://valiant-sync-orbit-plan.base44.app`; new events persist to D1.
 - Reopen an RSVP on the same browser to update the same attendee rather than
   create a duplicate.
 - Create recoverable named friend links through the private management API;
@@ -505,6 +505,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | Base44 / coordination spine | Restored the public Base44 slug from `plan-it-ignition-hacks` to the originally shared `valiant-sync-orbit-plan` and republished the corrected build. Before the change the original URL returned HTTP 404; afterward it returned 200. Production browser verification measured 340px/300px large planet covers, mounted exactly one iframe after `Explore planet`, visibly rendered the generated World Labs scene, and reported zero console logs/errors. The temporary renamed URL now returns 404; Sites CORS keeps both origins allowlisted harmlessly. |
 | 2026-08-22 | Base44 / coordination spine | Fixed the missing production World Labs display at its layout source: widthless Framer Motion wrappers caused both large `PlanetWorldFrame` instances to collapse to 0px even though the SVG and world URL were healthy. Added `w-full min-w-0` only to the large wrappers in `src/pages/Landing.jsx` and `src/components/DemoStepper.jsx`, then republished. Production verification measured 340px/300px planet covers, 0 iframes before interaction, exactly 1 after `Explore planet`, and a visibly rendered generated World Labs scene. Small pipeline planets, APIs, polling, event data, prompts, and credentials were unchanged. |
 | 2026-08-22 | Base44 / coordination spine | Republished the live-count planet-cover fix. Base44 renamed the public app to `plan-it-ignition-hacks.base44.app`; added that origin to the existing Sites CORS allowlist, redeployed validated Sites version 6 with environment revision 5, and verified the production guest route loads `2 in orbit` / `Gathering`. The previous public and preview origins remain allowed for compatibility. |
 | 2026-08-22 | Base44 / coordination spine | Changed World Labs presentation in the Base44 editor to a two-state live planet cover: event title/stage/attendee orbit first, iframe only after `Explore planet`, and `Back to planet` unmounts it. Added 5-second visible-tab polling for real guest/manage data plus an immediate post-RSVP refresh, while leaving the Sites iframe's own lantern polling and immutable World Labs world intact. Editor behavior checks verified 0 → 1 → 0 iframes and correct event-owned URLs; automated tests could not run because the Base44 project has no test runner. The later publish entry records production rollout. |
