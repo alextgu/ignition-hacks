@@ -24,6 +24,33 @@ test("restores the same guest identity from its cookie", () => {
   assert.deepEqual(identity, { guestId: "guest-secret", setCookie: null });
 });
 
+test("uses a valid Base44 guest header instead of cross-site cookies", () => {
+  const identity = resolveGuestIdentity(
+    new Request("https://snapplan.test/e/demo", {
+      headers: {
+        cookie: "snapplan_guest_id=cookie-guest",
+        "x-snapplan-guest-id": "base44-browser-guest",
+      },
+    }),
+    () => "different",
+  );
+  assert.deepEqual(identity, {
+    guestId: "base44-browser-guest",
+    setCookie: null,
+  });
+});
+
+test("ignores malformed Base44 guest headers", () => {
+  const identity = resolveGuestIdentity(
+    new Request("https://snapplan.test/e/demo", {
+      headers: { "x-snapplan-guest-id": "bad id!" },
+    }),
+    () => "generated-guest",
+  );
+  assert.equal(identity.guestId, "generated-guest");
+  assert.match(identity.setCookie ?? "", /^snapplan_guest_id=generated-guest;/);
+});
+
 test("omits Secure only for local development", () => {
   const identity = resolveGuestIdentity(
     new Request("http://localhost:3000/e/demo"),

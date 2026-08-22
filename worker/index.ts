@@ -1,10 +1,16 @@
 /** Cloudflare Worker entry point for the vinext-starter template. */
 import { handleImageOptimization, DEFAULT_DEVICE_SIZES, DEFAULT_IMAGE_SIZES } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
+import {
+  applyApiCors,
+  handleApiPreflight,
+  parseAllowedOrigins,
+} from "../src/features/http/cors";
 
 interface Env {
   ASSETS: Fetcher;
   DB: D1Database;
+  PLANIT_ALLOWED_ORIGINS?: string;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -28,6 +34,9 @@ interface ExecutionContext {
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+    const allowedOrigins = parseAllowedOrigins(env.PLANIT_ALLOWED_ORIGINS);
+    const preflight = handleApiPreflight(request, allowedOrigins);
+    if (preflight) return preflight;
 
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];
@@ -40,7 +49,8 @@ const worker = {
       }, allowedWidths);
     }
 
-    return handler.fetch(request, env, ctx);
+    const response = await handler.fetch(request, env, ctx);
+    return applyApiCors(request, response, allowedOrigins);
   },
 };
 

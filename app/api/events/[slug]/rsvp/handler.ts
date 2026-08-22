@@ -44,8 +44,10 @@ export function createRsvpHandlers(
           identity.setCookie,
         );
       }
+      const { managementToken, ...publicEvent } = result.event;
+      void managementToken;
       return jsonWithIdentity(
-        { attendee: result.attendee },
+        { event: publicEvent, attendee: result.attendee },
         200,
         identity.setCookie,
       );

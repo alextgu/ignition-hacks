@@ -1,12 +1,12 @@
-# SnapPlan — Single Source of Truth
+# Plan-it — Single Source of Truth
 
-> **Working title:** SnapPlan is temporary. This document is the authoritative
+> **Project name:** Plan-it. This document is the authoritative
 > operational summary for the hackathon repository at
 > `/Users/agu/Desktop/ignition-hacks`.
 
 ## Product Goal
 
-SnapPlan moves a small social event from a vague idea to a bookable group
+Plan-it moves a small social event from a vague idea to a bookable group
 decision. It collects availability and price comfort through one link, creates
 a shared spatial-art experience, and hands a confirmed event brief to an
 autonomous booking agent.
@@ -40,12 +40,13 @@ The coordination foundation is implemented and deployed.
 - Final UI: not in this repository; Base44 owns the finished interface.
 - Current pages: temporary functional harnesses only.
 - Durable models: `events` and `attendees`.
-- Guest identity: one editable attendee per event and anonymous browser ID.
+- Guest identity: one editable attendee per event and anonymous browser ID;
+  cross-origin clients use `X-SnapPlan-Guest-Id`.
 - Host security: unguessable management token in the private management URL.
 - Event creation returns separate guest and management URLs.
 - Management state includes attendee, availability, and price summaries.
 - World fields already exist on events: status, embed URL, and preview image.
-- Verification baseline: 22 unit tests, the production build, the rendered-HTML
+- Verification baseline: 29 unit tests, the production build, the rendered-HTML
   test, and lint pass with the required Node 22.13-or-newer runtime.
 
 ### Stable HTTP Surface
@@ -87,17 +88,16 @@ and confirmed booking state. This work must not implement final UI.
 
 ### Base44 Compatibility
 
-The temporary site currently identifies guests with a same-origin HTTP-only
-cookie. A separately hosted Base44 UI must not depend on cross-site cookies.
-The planned contract is:
+The backend supports both its same-origin HTTP-only cookie and a cross-origin
+Base44 client. The implemented contract is:
 
 - Base44 creates one random anonymous guest ID per browser and persists it.
 - RSVP requests send it as `X-SnapPlan-Guest-Id`.
 - The backend validates the ID and retains the cookie path as a fallback.
 - CORS allows only configured frontend origins.
 
-The final Base44 origin is not known yet and must be configured before final
-cross-origin testing.
+The known Base44 preview and published origins must be configured in the hosted
+`PLANIT_ALLOWED_ORIGINS` allowlist before cross-origin testing.
 
 ### Booking Brief
 
@@ -158,7 +158,7 @@ Secrets live only in local `.env` and hosted runtime configuration.
 
 ## Critical Path
 
-1. Add Base44-safe guest identity and restricted CORS support.
+1. Connect the existing Base44 `planitApi` adapter to the deployed API.
 2. Add event lock-in and a validated immutable booking brief.
 3. Add durable booking attempts and their state machine.
 4. Connect a Twilio number or verified caller ID to the configured ElevenLabs
@@ -171,8 +171,8 @@ Secrets live only in local `.env` and hosted runtime configuration.
 ## Current Blockers and Risks
 
 - The ElevenLabs account currently has zero connected caller numbers.
-- The final Base44 origin is not known, so the production CORS allowlist cannot
-  be finalized.
+- The Base44 interface still defaults to fixture data until its adapter is
+  switched to the deployed API.
 - World generation is asynchronous and can take minutes; the fallback scene is
   mandatory for a reliable demo.
 - Online autonomous booking is a provider extension. The real hackathon path
@@ -186,7 +186,7 @@ Secrets live only in local `.env` and hosted runtime configuration.
 - [x] One editable RSVP per anonymous browser.
 - [x] Availability and price consensus summary.
 - [x] Public deployment of the temporary functional harness.
-- [ ] Base44 cross-origin API compatibility.
+- [x] Base44 cross-origin API compatibility.
 - [ ] Finished Base44 interface.
 - [ ] World Labs generation and dependable fallback.
 - [ ] Event lock-in and booking brief.
@@ -213,3 +213,5 @@ Secrets live only in local `.env` and hosted runtime configuration.
 - Corrected the local World Labs key status and recorded its env-name mismatch.
 - Approved the Marble 1.1 plus SparkJS embeddable-canvas architecture and the
   Lantern Diorama visual system.
+- Renamed the product to Plan-it and implemented the Base44-safe guest ID,
+  restricted CORS boundary, and public guest-event API response.

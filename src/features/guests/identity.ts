@@ -1,4 +1,10 @@
 const cookieName = "snapplan_guest_id";
+const guestIdPattern = /^[a-zA-Z0-9_-]{8,128}$/;
+
+function readGuestHeader(request: Request) {
+  const value = request.headers.get("x-snapplan-guest-id");
+  return value && guestIdPattern.test(value) ? value : null;
+}
 
 function readCookie(header: string | null) {
   if (!header) return null;
@@ -6,7 +12,7 @@ function readCookie(header: string | null) {
     const [name, ...valueParts] = part.trim().split("=");
     if (name !== cookieName) continue;
     const value = valueParts.join("=");
-    if (/^[a-zA-Z0-9_-]{8,128}$/.test(value)) return value;
+    if (guestIdPattern.test(value)) return value;
   }
   return null;
 }
@@ -20,6 +26,9 @@ export function resolveGuestIdentity(
   request: Request,
   createId: () => string = defaultGuestId,
 ) {
+  const headerGuestId = readGuestHeader(request);
+  if (headerGuestId) return { guestId: headerGuestId, setCookie: null };
+
   const existing = readCookie(request.headers.get("cookie"));
   if (existing) return { guestId: existing, setCookie: null };
 

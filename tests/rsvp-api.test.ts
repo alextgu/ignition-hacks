@@ -102,3 +102,29 @@ test("returns not found for an unknown event", async () => {
   );
   assert.equal(response.status, 404);
 });
+
+test("returns public event details without exposing the management token", async () => {
+  const handlers = createRsvpHandlers(
+    {
+      async getGuestResponse() {
+        return { event, attendee: null };
+      },
+      async upsertGuestResponse() {
+        return { ok: false as const, error: "Event not found." };
+      },
+    },
+    () => "guest-secret",
+  );
+
+  const response = await handlers.get(
+    new Request("https://snapplan.test/api/events/demo-event/rsvp"),
+    "demo-event",
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(body.event.title, event.title);
+  assert.equal(body.event.publicSlug, event.publicSlug);
+  assert.equal(body.event.managementToken, undefined);
+  assert.equal(body.attendee, null);
+});
