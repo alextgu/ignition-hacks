@@ -13,13 +13,44 @@
 
 export type WorldLabsModel = "marble-1.1" | "marble-1.1-plus";
 
+/** How an individual image is referenced in a prompt. */
+export type WorldLabsImageContent =
+  | { source: "uri"; uri: string }
+  | { source: "media_asset"; media_asset_id: string };
+
+export type WorldLabsTextPrompt = {
+  type: "text";
+  text_prompt: string;
+};
+
+export type WorldLabsImagePrompt = {
+  type: "image";
+  image_prompt: WorldLabsImageContent;
+  /** Optional steer; World Labs auto-captions when omitted. */
+  text_prompt?: string;
+  /** "auto" lets them detect an equirectangular panorama. */
+  is_pano?: "auto";
+};
+
+export type WorldLabsMultiImagePrompt = {
+  type: "multi-image";
+  /** Up to 8. `azimuth` is degrees clockwise: 0 front, 90 right, 180 back. */
+  multi_image_prompt: Array<{
+    azimuth: number;
+    content: WorldLabsImageContent;
+  }>;
+  text_prompt?: string;
+};
+
+export type WorldLabsPrompt =
+  | WorldLabsTextPrompt
+  | WorldLabsImagePrompt
+  | WorldLabsMultiImagePrompt;
+
 export type GenerateWorldRequest = {
   display_name: string;
   model: WorldLabsModel;
-  world_prompt: {
-    type: "text";
-    text_prompt: string;
-  };
+  world_prompt: WorldLabsPrompt;
 };
 
 export type WorldLabsErrorObject = {
@@ -32,6 +63,18 @@ export type WorldLabsAssets = {
   caption?: string;
   imagery?: {
     pano_url?: string;
+  };
+  splats?: {
+    /** Keyed by density, e.g. "100k", "500k", "full_res". */
+    spz_urls?: Record<string, string>;
+    semantics_metadata?: {
+      scale?: number;
+      ground_plane_offset?: number;
+    };
+  };
+  mesh?: {
+    collider_mesh_url?: string;
+    hq_mesh_url?: string;
   };
 };
 

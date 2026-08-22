@@ -5,7 +5,7 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** by the integrations agent (Base44 build track)
+- Last updated: **2026-08-22** by the integrations agent (World Labs multimodal + render assets)
 
 ---
 
@@ -51,9 +51,9 @@ vendor docs, and a rewrite loses that.
 | Guest page + RSVP (`/e/{slug}`) | **Base44** (prompt 1) | **Prompts ready** | 2026-08-22 |
 | Host dashboard (`/manage/{token}`) | **Base44** (prompt 1) | **Prompts ready** | 2026-08-22 |
 | Guest identity / duplicate prevention | **Base44** (prompt 1) | **Prompts ready** | 2026-08-22 |
-| World Labs integration | integrations agent | **Done** — real + mock, runtime-agnostic, 29 tests green | 2026-08-22 |
+| World Labs integration | integrations agent | **Done** — text/image/multi-image, render assets exposed, 52 tests green | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock, runtime-agnostic, 65 tests green | 2026-08-22 |
-| Spatial-art UI (scene panel, guest overlays) | unassigned | **Not started** | 2026-08-22 |
+| In-app world viewer (SparkJS, base + walk cameras) | unassigned | **Not started** — spec'd, needs `three` + `@sparkjsdev/spark` | 2026-08-22 |
 | Ready-to-plan → booking handoff UI | unassigned | **Not started** | 2026-08-22 |
 | Base44 build prompts (4 staged) | integrations agent | **Done** — ready to paste | 2026-08-22 |
 | Base44 app build | Simon (on platform) | **Not started** | 2026-08-22 |
@@ -244,8 +244,13 @@ started until 1–5 work.
 ### Needs a decision
 - **World Labs iframe embedding is unverified.** The docs don't document an
   official iframe-embed contract (CORS / `X-Frame-Options`) for
-  `world_marble_url`. Test it in a browser early. If it won't embed, open it
-  in a new tab — plan the UI so either works.
+  `world_marble_url`. Test it early; plan for a new-tab fallback.
+- **The in-app viewer is the big open build.** `WorldResult.assets` now
+  carries everything SparkJS needs (splats, collider, scale, ground plane).
+  One scene serves both cameras: high and angled down is the base view,
+  dropped to eye height is walking through it — a camera animation, not a
+  second generation. Costs `three` + `@sparkjsdev/spark` and a render loop.
+  See `docs/world-labs-setup.md`.
 - **Git identity.** Commits so far used a local `user.email` on the
   worktrees because the repo had none configured. Reconcile before judging if
   commit attribution matters.
@@ -315,6 +320,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | integrations | World Labs: rewrote the prompt mapper to emit renderable spatial language (was abstract mood words Marble can't use); added a deterministic planet render for the load-in/no-key state; added image and multi-image generation modes with `marble-1.1-plus` for expansive scenes; exposed splat URLs, collider mesh, pano, scale and ground-plane offset on `WorldResult` so the app can render with SparkJS. 117 tests green. |
 | 2026-08-22 | integrations | Made `src/integrations/**` runtime-agnostic (dropped `Buffer`/`node:crypto`/`process.env` for web standards) so Base44's Deno runtime reuses them verbatim; 94 tests still green. Rewrote prompt 2 to wire them in instead of rebuilding. Added `port/integration-bundle.md`. Settled §0 after confirming the attached folder is the whole codebase. |
 | 2026-08-22 | integrations | Base44 track: 4 staged build prompts in `docs/base44/` with verified vendor API contracts embedded. Verified Base44 capabilities; cut Wallet passes (cert blocker) and payment splitting (non-goal); flagged `waitUntil()` misuse. Raised the Base44-vs-hand-built decision as §0. |
 | 2026-08-22 | integrations | ElevenLabs booking agent: contract, brief→call-script mapper, real adapter, deterministic simulated call, 65 tests, setup doc. Extracted `shared/httpJson.ts`. Added `SSOT.md` + `AGENTS.md`. |

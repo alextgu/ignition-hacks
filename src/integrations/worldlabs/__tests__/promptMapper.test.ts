@@ -13,21 +13,98 @@ const baseSeed: WorldSeed = {
   priceCharacter: "mid-range",
 };
 
-test("buildWorldPrompt includes every WorldSeed field", () => {
+test("the host's own description and location survive into the prompt", () => {
   const prompt = buildWorldPrompt(baseSeed);
-  assert.match(prompt, /cozy birthday dinner scene/i);
-  assert.match(prompt, /a cozy birthday dinner with string lights/);
+  assert.match(prompt, /a cozy birthday dinner with string lights/i);
   assert.match(prompt, /Toronto/);
-  assert.match(prompt, /golden hour/);
-  assert.match(prompt, /group of about 8 people/);
-  assert.match(prompt, /mid-range/);
 });
 
-test("buildWorldPrompt is deterministic for the same seed", () => {
+test("event type is translated into an actual kind of room", () => {
+  assert.match(buildWorldPrompt(baseSeed), /restaurant dining room/i);
+  assert.match(
+    buildWorldPrompt({ ...baseSeed, eventType: "corporate offsite" }),
+    /private event room|boardroom/i
+  );
+  assert.match(
+    buildWorldPrompt({ ...baseSeed, eventType: "rooftop party" }),
+    /rooftop terrace|loft/i
+  );
+});
+
+test("mood becomes light behaviour, not the emotion word", () => {
+  const cozy = buildWorldPrompt(baseSeed);
+  assert.match(cozy, /pools of light|candles|shadows/i);
+
+  const lively = buildWorldPrompt({ ...baseSeed, mood: "energetic" });
+  assert.match(lively, /bright even light|colour wash/i);
+  // Marble can't render an emotion; the word itself must not be the instruction.
+  assert.doesNotMatch(lively, /\benergetic\b/i);
+});
+
+test("price character becomes real materials", () => {
+  assert.match(buildWorldPrompt(baseSeed), /oak|tile|brass/i);
+  assert.match(
+    buildWorldPrompt({ ...baseSeed, priceCharacter: "budget-friendly" }),
+    /pine|painted brick|vinyl/i
+  );
+  assert.match(
+    buildWorldPrompt({ ...baseSeed, priceCharacter: "splurge-worthy" }),
+    /marble|walnut|velvet/i
+  );
+});
+
+test("time character becomes the quality and direction of light", () => {
+  assert.match(buildWorldPrompt(baseSeed), /golden sunlight|raking/i);
+  assert.match(
+    buildWorldPrompt({ ...baseSeed, timeCharacter: "late night" }),
+    /full dark|interior fixtures/i
+  );
+});
+
+test("group size becomes concrete furniture, and scales", () => {
+  assert.match(buildWorldPrompt({ ...baseSeed, groupSize: 2 }), /two-top/i);
+  assert.match(buildWorldPrompt({ ...baseSeed, groupSize: 4 }), /four chairs/i);
+  assert.match(buildWorldPrompt({ ...baseSeed, groupSize: 8 }), /8 chairs/);
+  assert.match(buildWorldPrompt({ ...baseSeed, groupSize: 24 }), /end to end/i);
+});
+
+test("the room is explicitly requested empty", () => {
+  // Marble does not render human figures, and the app layers guest markers
+  // over the scene, so asking for people wastes the generation.
+  const prompt = buildWorldPrompt(baseSeed);
+  assert.match(prompt, /unoccupied/i);
+  assert.match(prompt, /no people/i);
+});
+
+test("the prompt carries a palette and spatial boundaries", () => {
+  const prompt = buildWorldPrompt(baseSeed);
+  assert.match(prompt, /palette of/i);
+  assert.match(prompt, /floor/i);
+  assert.match(prompt, /ceiling/i);
+  assert.match(prompt, /sightlines/i);
+});
+
+test("text, signage and logos are excluded", () => {
+  assert.match(buildWorldPrompt(baseSeed), /no text, no signage, no logos/i);
+});
+
+test("the prompt stays within Marble's 2000 character cap", () => {
+  const long: WorldSeed = {
+    ...baseSeed,
+    description: "a ".repeat(1200),
+    location: "x".repeat(300),
+  };
+  const prompt = buildWorldPrompt(long);
+  assert.ok(prompt.length <= 2000, `was ${prompt.length}`);
+  // Truncation must not leave a dangling half-clause.
+  assert.ok(prompt.endsWith(".") || prompt.length < 2000);
+});
+
+test("buildWorldPrompt is deterministic", () => {
   assert.equal(buildWorldPrompt(baseSeed), buildWorldPrompt({ ...baseSeed }));
 });
 
-test("buildWorldPrompt tolerates missing optional fields", () => {
+test("unknown or empty answers fall back without leaking placeholders", () => {
   const sparse: WorldSeed = {
     description: "a rooftop meetup",
     eventType: "",
@@ -38,22 +115,18 @@ test("buildWorldPrompt tolerates missing optional fields", () => {
     priceCharacter: "",
   };
   const prompt = buildWorldPrompt(sparse);
-  assert.match(prompt, /a rooftop meetup/);
-  assert.match(prompt, /group of about 4 people/); // falls back to a sane default
-  assert.doesNotMatch(prompt, /\bundefined\b/);
-  assert.doesNotMatch(prompt, /\bnull\b/);
+  assert.match(prompt, /a rooftop meetup/i);
+  assert.match(prompt, /four chairs/i); // sane default group of 4
+  assert.doesNotMatch(prompt, /undefined|null|NaN/);
+  assert.ok(prompt.length > 200, "a sparse seed must still yield a usable prompt");
 });
 
-test("buildWorldPrompt singularizes a group of one", () => {
-  const prompt = buildWorldPrompt({ ...baseSeed, groupSize: 1 });
-  assert.match(prompt, /group of about 1 person\b/);
+test("a group of one reads naturally", () => {
+  assert.match(buildWorldPrompt({ ...baseSeed, groupSize: 1 }), /for 1 person\b/);
 });
 
 test("buildWorldDisplayName combines event type and location", () => {
   assert.equal(buildWorldDisplayName(baseSeed), "birthday dinner — Toronto");
-});
-
-test("buildWorldDisplayName falls back to a generic label", () => {
   assert.equal(
     buildWorldDisplayName({ ...baseSeed, eventType: "", location: "" }),
     "Event"

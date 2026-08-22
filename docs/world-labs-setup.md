@@ -98,6 +98,62 @@ status — is caught and converted into `{ status: "failed", error }`. Neither
 method ever throws, so callers can treat "World Labs is down" the same way
 they treat "World Labs returned an error."
 
+## Generation modes — escalating fidelity
+
+`generateWorld` picks the richest mode the seed supports. The app doesn't
+choose an endpoint; it just supplies whatever it has.
+
+| Seed carries | Mode sent | Result |
+|---|---|---|
+| nothing extra | `type: "text"` | A plausible room from the host's description |
+| `venuePhoto` | `type: "image"` + `text_prompt` | The **actual venue** from one photo |
+| `guestPhotos` (2–8) | `type: "multi-image"` | The room the group was **really in**, from their own photos |
+
+Rules the adapter enforces:
+
+- `guestPhotos` beats `venuePhoto` — photos from the event are always better
+  evidence than a listing image.
+- A single guest photo degrades to `image` mode rather than sending a
+  one-item multi-image request.
+- More than 8 guest photos are truncated to 8 (World Labs' documented cap).
+- `direction` (`front`/`right`/`back`/`left`) maps to azimuth 0/90/180/270.
+  Unlabelled photos are spread evenly around the room.
+- `expansive: true` selects `marble-1.1-plus` for outdoor and large scenes.
+
+Images can be a public `uri` or a `mediaAssetId` already uploaded to World
+Labs. Uploading via `media-assets:prepare_upload` is **not implemented** —
+public URLs only for now.
+
+## Render assets — running our own viewer
+
+A ready `WorldResult` carries an optional `assets` block so the app can render
+the world itself instead of only linking out:
+
+```ts
+assets?: {
+  splatUrls?: { low?: string; medium?: string; full?: string }; // 100k / 500k / full_res
+  colliderMeshUrl?: string;   // GLB, raycast to place objects on real geometry
+  panoUrl?: string;
+  scale?: number;             // from semantics_metadata
+  groundPlaneOffset?: number; // where the floor is
+  caption?: string;
+}
+```
+
+This exists for **SparkJS**, World Labs' own THREE.js Gaussian-splat renderer
+(`npm i @sparkjsdev/spark`), which their docs call "the recommended way to
+render World Labs splat assets in the browser." It reads SPZ directly and
+fuses splats with ordinary THREE.js meshes, so guest markers can be real
+objects standing in the generated room.
+
+`scale` and `groundPlaneOffset` are the important pair — they're how you place
+markers on the actual floor rather than guessing. Load `low` on mobile
+(Spark's splat budget is roughly 500K–2.5M depending on device).
+
+Every field is optional and `assets` is absent entirely when World Labs
+returns no splats. A missing splat must degrade to the link-out viewer or the
+animated fallback — never an error.
+
 ## Limitations and open questions
 
 - **Embedding.** World Labs' publicly documented output is a shareable
@@ -122,6 +178,15 @@ they treat "World Labs returned an error."
   same as any other failure (fall back to the mock/animated state; do not
   automatically regenerate, since project.md explicitly says the world
   should not be regenerated after every request).
+- **We render splats ourselves via a dependency.** SparkJS + `three` is a
+  real addition, not free. Anything that can't do WebGL2 needs the fallback.
+- **Multi-image fills in the unseen.** Areas the cameras never covered are
+  generated "plausibly", so a reconstruction is a keepsake, not a survey.
+  Don't describe it as a replica.
+- **Marble does not generate people.** Their docs are explicit that it builds
+  environments "rather than focusing on isolated or central objects, such as
+  people or animals." The prompt asks for an empty room deliberately; guests
+  are added as our own objects.
 - **Thumbnails.** `assets.thumbnail_url` is only guaranteed once `done` is
   `true`; there is no separate "preview while pending" image from the API
   itself. The app's own animated/mock fallback fills that gap.
