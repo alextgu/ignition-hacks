@@ -5,8 +5,8 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** — World Labs app wiring published in Sites
-  version 5; Base44 iframe handoff verified in editor preview
+- Last updated: **2026-08-22** — World Labs hosted secret configured and
+  applied to production; Base44 iframe handoff verified in editor preview
 
 ---
 
@@ -42,7 +42,7 @@ contracts.
 | Unified + named friend links | coordination spine | **Backend deployed; Base44 preview verified** — public UI publish pending | 2026-08-22 |
 | Twilio/ElevenLabs live call path | coordination spine | **Done** — dry-run + live/mock dispatch + status poll | 2026-08-22 |
 | World Labs integration | integrations agent | **Done** — text/image/multi-image, render assets exposed | 2026-08-22 |
-| World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Deployed** — Base44 preview iframe handoff verified; real Marble still needs a hosted key | 2026-08-22 |
+| World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Deployed** — hosted key active; Base44 preview iframe handoff verified; live credit not yet exercised | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
 | Finished Base44 UI | Base44 / Simon | **Done** — published with live API adapter | 2026-08-22 |
 | In-app world viewer (SparkJS, base + walk cameras) | unassigned | **Not started** — dependency-free panorama canvas ships instead; splat URLs already served | 2026-08-22 |
@@ -67,6 +67,9 @@ contracts.
 - Run integration mocks with zero credentials via `src/integrations/**`.
 - Creating an event now starts **exactly one** Marble generation, and the
   event is usable immediately whether or not it succeeds.
+- The production Sites runtime now has the World Labs key. Events created
+  after the 2026-08-22 environment deployment use the real adapter; older
+  fallback events remain fallback by the one-generation-per-event guarantee.
 - Open `/world/{slug}` — the embeddable canvas. It shows the generated
   panorama once Marble finishes, the deterministic planet until then, and
   one light per RSVP in every state.
@@ -288,8 +291,10 @@ Nothing is required to run the app — every integration falls back to its
 mock. `.env.example` documents both Sites and integration variables.
 
 The Sites deployment sets `PLANIT_ALLOWED_ORIGINS` to the published Base44
-origin plus its editor preview origins. Base44 sends `X-SnapPlan-Guest-Id` for
-guest identity; it does not depend on cross-site cookies.
+origin plus its editor preview origins. It also stores `WORLDLABS_API_KEY` as
+a Sites secret and sets `WORLDLABS_TIMEOUT_MS=20000`. Base44 sends
+`X-SnapPlan-Guest-Id` for guest identity; it does not depend on cross-site
+cookies and never receives the World Labs credential.
 
 ### World Labs
 
@@ -303,8 +308,8 @@ guest identity; it does not depend on cross-site cookies.
 
 With no key the app still works end to end: every event gets the
 deterministic planet, and the canvas says so rather than claiming a
-generated world. Set `WLT_API_KEY` in the hosted environment to turn on real
-generation — nothing else changes.
+generated world. Production uses the canonical `WORLDLABS_API_KEY`; local
+development may use the supported `WLT_API_KEY` alias. Nothing else changes.
 
 ### ElevenLabs
 
@@ -420,7 +425,8 @@ with zero credentials because the mock adapter already simulates a call over
 - **Verified without spending a credit.** The real adapter was exercised
   against a local stub of the Marble API: generate → operation stored →
   throttle honoured → poll → panorama, splats and caption persisted → canvas
-  switched to the live world. No live generation has been run yet.
+  switched to the live world. The hosted secret is now active, but no live
+  generation has been run yet.
 - **Redaction is enforced at the seed, and tested.** The event *title* is
   never sent (hosts put names in titles), and the description is stripped of
   emails, phone numbers, URLs, bare domains and @handles first. A test
@@ -465,6 +471,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | coordination spine | Stored `WORLDLABS_API_KEY` only in the Sites runtime, set the hosted timeout to 20 seconds, and redeployed the existing validated version with environment revision 4. Base44 receives only `worldUrl`; no credential was copied into Base44. No live Marble credit was used. |
 | 2026-08-22 | coordination spine | Published Sites version 5 and verified the Base44 editor handoff end to end: create returns `worldUrl`; create success, guest, and host Planet reuse the same app-owned iframe; one RSVP adds state without regenerating; fixtures remain labelled fallbacks. No live Marble credit was used because no hosted key is configured. |
 | 2026-08-22 | coordination spine | Hardened the ElevenLabs booking status route: it now validates the private management token before polling a provider call, with regression coverage. The fixed-number live/mock booking contract is unchanged. |
 | 2026-08-22 | coordination spine | Wired World Labs into the app: one generation per event at creation, 9 new D1 world columns with additive migrations, `GET /api/events/{slug}/world`, and the embeddable `/world/{slug}` canvas (panorama + guest lanterns, planet fallback, no new dependencies). Added the canvas to `/e/{slug}`. 22 new tests; live path verified against a stubbed Marble API. |
