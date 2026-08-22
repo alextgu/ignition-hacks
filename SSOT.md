@@ -38,7 +38,7 @@ contracts.
 | Persistence / data model (Event, Attendee, Invitation) | coordination spine | **Done** on Sites; Base44 may mirror | 2026-08-22 |
 | Host creation / guest RSVP / manage harness | coordination spine | **Done** (temporary UI) | 2026-08-22 |
 | Base44-safe guest ID + CORS | coordination spine | **Done** | 2026-08-22 |
-| Unified + named friend links | coordination spine | **Backend done** — Base44 wiring pending publish | 2026-08-22 |
+| Unified + named friend links | coordination spine | **Backend deployed; Base44 preview verified** — public UI publish pending | 2026-08-22 |
 | Twilio/ElevenLabs live call path | coordination spine | **Done** — dry-run + live/mock dispatch + status poll | 2026-08-22 |
 | World Labs integration | integrations agent | **Done** — text/image/multi-image, render assets exposed | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
@@ -86,7 +86,7 @@ not claim that sponsor integrations are routed yet: `/api/manage/{token}/book`
 is still a dry-run/readiness wireframe, the ElevenLabs webhook verifies but does
 not persist outcomes, and World Labs generation is not invoked by an app route.
 
-### Named invitation contract (implemented; production publish pending)
+### Named invitation contract (implemented and deployed)
 
 - `POST /api/manage/{managementToken}/invitations` accepts
   `{ "names": ["Alex", "Sam"] }` and returns shareable named guest URLs.
@@ -277,7 +277,7 @@ falls back to the mock rather than failing at call time.
 | 2 | Host receives separate guest and management links | ✅ Base44 + Sites |
 | 3 | Multiple guests on different browsers submit availability + price | ✅ Base44 + Sites |
 | 4 | Same browser can't create duplicate attendees | ✅ Base44 + Sites |
-| 4a | Named friend link can't create duplicate attendees across browsers | ✅ Sites backend; Base44 wiring pending |
+| 4a | Named friend link can't create duplicate attendees across browsers | ✅ Sites live + Base44 preview; public UI publish pending |
 | 5 | Host sees a clear consensus summary | ✅ Base44 + Sites |
 | 6 | Recognizable spatial-art experience with dependable fallback | ✅ Planetoid fallback; World Labs integration ready |
 | 7 | Ready-to-plan state with booking/seating/requirements actions | ✅ Honest pending/dry-run UI |
@@ -308,8 +308,8 @@ is already live and verified.
   See `docs/world-labs-setup.md`.
 
 ### Next integration step
-- Publish the invitation-enabled Sites version, then update Base44's create
-  success screen and guest adapter to preserve the `invite` query parameter.
+- Publish the already-verified Base44 editor version so the public Plan-it UI
+  exposes the unified/named choice, named guest prefill, and host link recovery.
 - **Git identity.** Commits so far used a local `user.email` on the
   worktrees because the repo had none configured. Reconcile before judging if
   commit attribution matters.
@@ -382,6 +382,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 | Date | Agent | Change |
 |---|---|---|
 | 2026-08-22 | coordination spine | Live call path: book route dispatches via ElevenLabs adapter, status poll endpoint, manage harness buttons, test-number safety gate. |
+| 2026-08-22 | coordination spine | Published Sites version 4 and production-audited named invitation creation, repeat RSVP update, and host recovery. Wired the existing Base44 preview through direct `planitApi` calls; independently verified named prefill, invalid-token fail-closed behavior, and host recovery. Public Base44 publish remains pending approval. |
 | 2026-08-22 | coordination spine | Added persistent named friend invitations, host-only link creation/recovery, invitation-owned cross-device RSVP identity, and a query-preserving temporary RSVP harness. Unified links remain supported. |
 | 2026-08-22 | merge | Combined origin/main Sites+Base44 live spine with local World Labs multimodal/render-assets work. |
 | 2026-08-22 | integrations | World Labs: rewrote the prompt mapper to emit renderable spatial language (was abstract mood words Marble can't use); added a deterministic planet render for the load-in/no-key state; added image and multi-image generation modes with `marble-1.1-plus` for expansive scenes; exposed splat URLs, collider mesh, pano, scale and ground-plane offset on `WorldResult` so the app can render with SparkJS. 117 tests green. |
