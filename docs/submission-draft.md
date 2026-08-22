@@ -48,35 +48,90 @@ final planit artifact for the group to reflect on!
 
 ## How we built it
 
-**The coordination app** is built on **Base44** — entities, pages, and Deno
-backend functions, using its realtime layer to stream the live call to every
-open screen at once. *[CONFIRM: describe what you actually built there.]*
+Plan-it is a Base44 app with two external services behind it: World Labs
+turns the host's description into an explorable world, and ElevenLabs makes
+the actual phone call to the venue. Both sit behind a boundary — the app
+hands over a `WorldSeed` or an `EventBrief` and gets back a result. It never
+sees a vendor endpoint. Each one has a real adapter and a deterministic mock,
+and the app picks between them from config, so the whole product runs end to
+end with **zero API keys set**. 98 unit tests, every network call mocked.
+Nothing in the test suite ever dials a phone.
 
-**The spatial scenes** come from the **World Labs World API** (Marble). We map
-the host's description plus the structured answers into a single prompt, fire
-`worlds:generate`, and poll the operation until the world is ready — roughly
-five minutes, so it happens in the background while people are still RSVPing.
-We store the viewer URL and the thumbnail, and the thumbnail doubles as the
-link-preview image when the event gets shared.
+### World Labs — the planit itself
 
-**The voice agent** is the **ElevenLabs Agents Platform** over **Twilio**. One
-agent is configured once; every call gets its context injected at dial time
-through dynamic variables and a per-call prompt override. The system prompt is
-generated from the group's actual data, and it encodes the host's negotiation
-bounds as hard limits — a per-person ceiling it cannot exceed, no payment
-details, no non-refundable deposits, and no accepting a time outside what the
-group agreed unless they marked themselves flexible. It's also instructed to
-say plainly that it's an AI assistant if anyone asks.
+The host's sentence plus their structured answers become one prompt: the
+mood, the event type, the city, the time of day, the price character, and the
+group size, which the prompt uses to ask for a room with the right number of
+places to gather. That goes to `worlds:generate` on `marble-1.1`, which
+returns an operation rather than a world.
 
-**Both integrations sit behind a boundary.** The app hands over a `WorldSeed`
-or an `EventBrief` and gets back a `WorldResult` or a `BookingCallResult`.
-Nothing about either vendor's API crosses that line. Each has a real adapter
-and a **deterministic mock**, and a factory picks between them from
-configuration — so the entire product runs, end to end, with **zero API keys
-set**. 98 unit tests, all with mocked network calls; nothing in CI ever dials
-a phone.
+Generation takes about five minutes, which shaped the design more than
+anything else. The event has to be shareable the instant it's created, so we
+generate **once per event** — never on RSVP — behind an animated fallback,
+and swap the real scene in when it's ready. Operations expire after an hour,
+so an expired one is treated as a failure that silently keeps the fallback;
+guests never see a world error. We also reuse the returned thumbnail as the
+link preview image, so a planit dropped in a group chat looks intentional.
 
----
+One thing we couldn't verify: World Labs doesn't publicly document an
+iframe-embed contract, so their headers may refuse framing. We render the
+iframe *and* always offer a new-tab link, because the guaranteed path has to
+exist.
+
+### ElevenLabs — the agent that actually calls
+
+One agent, configured once. Every call gets its context injected at dial time
+through dynamic variables and a per-call prompt override, rather than
+creating an agent per booking.
+
+The system prompt is generated from the group's real data, and the host's
+negotiation range is written into it as **hard limits**: a per-person ceiling
+it cannot exceed, no card or payment details, no non-refundable deposits, and
+no accepting a time outside what the group agreed unless they marked
+themselves flexible. If the venue pushes past those, the agent is instructed
+to say it needs to check with the group and end politely. It's also told to
+state plainly that it's an AI assistant if anyone asks, and never to claim
+otherwise. Call recording is off by default, because recording a restaurant
+can require their consent.
+
+Polling the conversation is where the care went. `processing` is not `done` —
+the call has hung up but the analysis is still running — so we keep reporting
+"wrapping up" instead of showing an empty result. And a finished call is
+**never** reported as booked without positive evidence: no analysis, or an
+unknown result, comes back as `needs_followup`, and the UI has no path that
+renders that as success. Telling a group they have a table when they don't is
+the one failure we refused to make possible.
+
+Twilio carries the call, connected through ElevenLabs' native integration.
+
+### Base44 — the app and the live loop
+
+Entities, pages, and Deno backend functions. Secrets come from
+`secrets.get()` inside the handler, and all writes from functions use
+`asServiceRole` since a polling call has no user context.
+
+The best thing Base44 gave us is the live loop. As the call progresses we
+append events to a `CallEvent` entity, and every open screen subscribes to
+it — so the whole group watches the negotiation arrive line by line, on their
+own phones, at the same time. No refresh, no polling in the UI.
+
+We deliberately did *not* use `waitUntil()` to place the call. Base44
+documents it as best-effort with no completion guarantee, and a phone call is
+not something you want to *probably* happen. The outbound request returns in
+under a second, so it goes inline and we poll for the outcome.
+
+*[CONFIRM: replace with what you actually built — entity names, pages, the
+functions you shipped.]*
+
+### Keeping it honest
+
+Everything above works with the mocks too. The simulated call unfolds over
+twelve seconds with the transcript appearing line by line, built from the
+real brief, so the venue name, the host's name, the party size and the
+dietary notes all show up in the dialogue. It's stateless — the brief and
+start time are encoded in the id — so it behaves identically after a
+redeploy. That's what lets us rehearse the demo on a plane, and it's why a
+dead API can't take the presentation down.
 
 ## Challenges we ran into
 
