@@ -8,7 +8,14 @@ type CreateEventService = {
   >;
 };
 
-export function createEventHandler(service: CreateEventService) {
+type CreateEventHandlerOptions = {
+  onEventCreated?: (event: EventRecord) => Promise<void> | void;
+};
+
+export function createEventHandler(
+  service: CreateEventService,
+  options: CreateEventHandlerOptions = {},
+) {
   return async function handleCreateEvent(request: Request) {
     let input: unknown;
     try {
@@ -25,13 +32,27 @@ export function createEventHandler(service: CreateEventService) {
       if (!result.ok) {
         return Response.json({ error: result.error }, { status: 400 });
       }
+
+      if (options.onEventCreated) {
+        try {
+          await options.onEventCreated(result.event);
+        } catch {
+          // World generation must never block event creation.
+        }
+      }
+
+      const origin = new URL(request.url).origin;
       const links = buildEventLinks(
-        new URL(request.url).origin,
+        origin,
         result.event.publicSlug,
         result.event.managementToken,
       );
       return Response.json(
-        { event: result.event, ...links },
+        {
+          event: result.event,
+          ...links,
+          worldUrl: `${origin.replace(/\/$/, "")}/world/${result.event.publicSlug}`,
+        },
         { status: 201 },
       );
     } catch {

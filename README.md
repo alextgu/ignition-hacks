@@ -109,12 +109,18 @@ totals. It does not echo the management token.
 
 ```json
 {
-  "live": false,
-  "toNumber": "+15551234567"
+  "live": true,
+  "toNumber": "+15551234567",
+  "venueName": "Test Kitchen",
+  "hostName": "Alex"
 }
 ```
 
-Defaults to a dry run that never calls ElevenLabs. Live calling requires Twilio credentials imported into ElevenLabs Telephony, plus `ELEVENLABS_PHONE_NUMBER_ID`, and `{ "live": true }`.
+- Omit `live` or set `false` for a dry run that never places a call.
+- Set `live: true` to dispatch through the ElevenLabs adapter (real when Twilio is linked and credentials are present; mock otherwise).
+- Destinations default to `ELEVENLABS_TEST_TO_NUMBER`. Any other number requires `"confirmRealVenue": true`.
+
+`GET /api/manage/{managementToken}/book/status?callId=...` polls call status/transcript.
 
 `POST /api/webhooks/elevenlabs` verifies the `ElevenLabs-Signature` HMAC header. Booking-attempt persistence is not wired yet.
 

@@ -39,7 +39,7 @@ contracts.
 | Host creation / guest RSVP / manage harness | coordination spine | **Done** (temporary UI) | 2026-08-22 |
 | Base44-safe guest ID + CORS | coordination spine | **Done** | 2026-08-22 |
 | Unified + named friend links | coordination spine | **Backend done** — Base44 wiring pending publish | 2026-08-22 |
-| Twilio env + dry-run book / webhook routes | coordination spine | **Wireframe done** — dry-run default | 2026-08-22 |
+| Twilio/ElevenLabs live call path | coordination spine | **Done** — dry-run + live/mock dispatch + status poll | 2026-08-22 |
 | World Labs integration | integrations agent | **Done** — text/image/multi-image, render assets exposed | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
 | Finished Base44 UI | Base44 / Simon | **Done** — published with live API adapter | 2026-08-22 |
@@ -58,7 +58,9 @@ contracts.
 - Create recoverable named friend links through the private management API;
   each link restores and updates one response even when opened on another
   device. The unified browser-identity link remains available.
-- Dry-run `POST /api/manage/{token}/book` (never places a live call by default).
+- `POST /api/manage/{token}/book` dry-run by default; `{ "live": true }` dispatches through ElevenLabs (real or mock).
+- `GET /api/manage/{token}/book/status?callId=` polls transcript/outcome.
+- Live dials are limited to `ELEVENLABS_TEST_TO_NUMBER` unless `confirmRealVenue` is true.
 - Verify `POST /api/webhooks/elevenlabs` HMAC signatures when configured.
 - Run integration mocks with zero credentials via `src/integrations/**`.
 
@@ -379,6 +381,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | coordination spine | Live call path: book route dispatches via ElevenLabs adapter, status poll endpoint, manage harness buttons, test-number safety gate. |
 | 2026-08-22 | coordination spine | Added persistent named friend invitations, host-only link creation/recovery, invitation-owned cross-device RSVP identity, and a query-preserving temporary RSVP harness. Unified links remain supported. |
 | 2026-08-22 | merge | Combined origin/main Sites+Base44 live spine with local World Labs multimodal/render-assets work. |
 | 2026-08-22 | integrations | World Labs: rewrote the prompt mapper to emit renderable spatial language (was abstract mood words Marble can't use); added a deterministic planet render for the load-in/no-key state; added image and multi-image generation modes with `marble-1.1-plus` for expansive scenes; exposed splat URLs, collider mesh, pano, scale and ground-plane offset on `WorldResult` so the app can render with SparkJS. 117 tests green. |

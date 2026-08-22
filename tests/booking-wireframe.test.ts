@@ -6,7 +6,14 @@ import {
 } from "../src/integrations/elevenlabs/config.ts";
 import { verifyElevenLabsWebhook } from "../src/integrations/elevenlabs/webhook.ts";
 import { createBookHandler } from "../app/api/manage/[token]/book/handler.ts";
+import { createBookStatusHandler } from "../app/api/manage/[token]/book/status/handler.ts";
 import { createElevenLabsWebhookHandler } from "../app/api/webhooks/elevenlabs/handler.ts";
+import { resolveDestination } from "../src/features/booking/brief.ts";
+import type {
+  BookingAgentAdapter,
+  BookingCallResult,
+  EventBrief,
+} from "../src/integrations/elevenlabs/types.ts";
 
 const event = {
   id: "event-1",
@@ -25,6 +32,15 @@ const event = {
   worldPreviewImageUrl: null,
   createdAt: "2026-08-22T12:00:00.000Z",
   updatedAt: "2026-08-22T12:00:00.000Z",
+};
+
+const readyEnv = {
+  ELEVENLABS_API_KEY: "key",
+  ELEVENLABS_AGENT_ID: "agent_1",
+  ELEVENLABS_PHONE_NUMBER_ID: "phone_1",
+  ELEVENLABS_TEST_TO_NUMBER: "+15551234567",
+  TWILIO_SID: "ACxxx",
+  TWILIO_API_KEY: "secret",
 };
 
 async function signBody(secret: string, timestamp: string, rawBody: string) {
@@ -46,6 +62,23 @@ async function signBody(secret: string, timestamp: string, rawBody: string) {
   return `t=${timestamp},v0=${hex}`;
 }
 
+function fakeAdapter(start: BookingCallResult): BookingAgentAdapter {
+  return {
+    async startBookingCall(brief: EventBrief) {
+      assert.equal(brief.venuePhoneNumber, "+15551234567");
+      return start;
+    },
+    async getBookingCallStatus(externalId: string) {
+      return {
+        status: "completed",
+        externalId,
+        outcome: "booked",
+        summary: "Table confirmed.",
+      };
+    },
+  };
+}
+
 test("reports Twilio and live-call readiness from env", () => {
   const incomplete = loadConfig({
     TWILIO_SID: "ACxxx",
@@ -60,16 +93,25 @@ test("reports Twilio and live-call readiness from env", () => {
     "ELEVENLABS_AGENT_PHONE_NUMBER_ID",
   ]);
 
-  const ready = loadConfig({
-    ELEVENLABS_API_KEY: "key",
-    ELEVENLABS_AGENT_ID: "agent_1",
-    ELEVENLABS_PHONE_NUMBER_ID: "phone_1",
-    ELEVENLABS_TEST_TO_NUMBER: "+15551234567",
-    TWILIO_SID: "ACxxx",
-    TWILIO_API_KEY: "secret",
-  });
+  const ready = loadConfig(readyEnv);
   assert.equal(describeConfig(ready).usingRealAdapter, true);
   assert.equal(ready.testToNumber, "+15551234567");
+});
+
+test("blocks live destinations outside the test number without confirmation", () => {
+  const blocked = resolveDestination({
+    requestedToNumber: "+14165550123",
+    testToNumber: "+15551234567",
+    confirmRealVenue: false,
+  });
+  assert.equal(blocked.ok, false);
+
+  const allowed = resolveDestination({
+    requestedToNumber: "+14165550123",
+    testToNumber: "+15551234567",
+    confirmRealVenue: true,
+  });
+  assert.deepEqual(allowed, { ok: true, toNumber: "+14165550123" });
 });
 
 test("book endpoint defaults to dry run", async () => {
@@ -78,16 +120,7 @@ test("book endpoint defaults to dry run", async () => {
       getManagedEvent: async (token) =>
         token === "manage-secret" ? { event } : null,
     },
-    {
-      getEnv: () => ({
-        ELEVENLABS_API_KEY: "key",
-        ELEVENLABS_AGENT_ID: "agent_1",
-        ELEVENLABS_PHONE_NUMBER_ID: "phone_1",
-        ELEVENLABS_TEST_TO_NUMBER: "+15551234567",
-        TWILIO_SID: "ACxxx",
-        TWILIO_API_KEY: "secret",
-      }),
-    },
+    { getEnv: () => readyEnv },
   );
 
   const response = await handle(
@@ -101,6 +134,58 @@ test("book endpoint defaults to dry run", async () => {
   const body = await response.json();
   assert.equal(body.booking.mode, "dry_run");
   assert.equal(body.readiness.twilioCredentialsConfigured, true);
+});
+
+test("live book endpoint dispatches through the booking adapter", async () => {
+  const handle = createBookHandler(
+    {
+      getManagedEvent: async (token) =>
+        token === "manage-secret" ? { event } : null,
+    },
+    {
+      getEnv: () => readyEnv,
+      createAdapter: () =>
+        fakeAdapter({
+          status: "pending",
+          externalId: "conv_123",
+        }),
+    },
+  );
+
+  const response = await handle(
+    new Request("https://snapplan.test/api/manage/manage-secret/book", {
+      method: "POST",
+      body: JSON.stringify({ live: true }),
+    }),
+    "manage-secret",
+  );
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.booking.mode, "live");
+  assert.equal(body.booking.call.externalId, "conv_123");
+  assert.equal(
+    body.statusUrl,
+    "/api/manage/manage-secret/book/status?callId=conv_123",
+  );
+});
+
+test("book status endpoint polls the adapter", async () => {
+  const handle = createBookStatusHandler({
+    getEnv: () => readyEnv,
+    createAdapter: () =>
+      fakeAdapter({
+        status: "pending",
+        externalId: "conv_123",
+      }),
+  });
+  const response = await handle(
+    new Request(
+      "https://snapplan.test/api/manage/manage-secret/book/status?callId=conv_123",
+    ),
+  );
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.call.outcome, "booked");
 });
 
 test("verifies ElevenLabs webhook signatures", async () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import type {
   AttendeeRecord,
   EventRecord,
@@ -19,6 +19,15 @@ export type ManagePayload = {
   };
 };
 
+type BookingCall = {
+  status?: string;
+  externalId?: string;
+  outcome?: string;
+  summary?: string;
+  transcript?: Array<{ role: string; message: string; atSeconds: number }>;
+  error?: string;
+};
+
 export function ManageDashboard({
   token,
   initial,
@@ -28,6 +37,11 @@ export function ManageDashboard({
 }) {
   const [data, setData] = useState(initial);
   const [refreshError, setRefreshError] = useState("");
+  const [bookingNote, setBookingNote] = useState("");
+  const [bookingError, setBookingError] = useState("");
+  const [call, setCall] = useState<BookingCall | null>(null);
+  const [statusUrl, setStatusUrl] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     const refresh = async () => {
@@ -43,6 +57,59 @@ export function ManageDashboard({
     const interval = window.setInterval(refresh, 10_000);
     return () => window.clearInterval(interval);
   }, [token]);
+
+  useEffect(() => {
+    if (!statusUrl) return;
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const response = await fetch(statusUrl);
+        if (!response.ok) return;
+        const body = await response.json();
+        if (!cancelled) setCall(body.call ?? null);
+        if (
+          body.call?.status === "completed" ||
+          body.call?.status === "failed"
+        ) {
+          window.clearInterval(interval);
+        }
+      } catch {
+        // Keep polling; transient network errors are expected.
+      }
+    };
+    const interval = window.setInterval(poll, 3_000);
+    void poll();
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [statusUrl]);
+
+  const startBooking = (live: boolean) => {
+    startTransition(async () => {
+      setBookingError("");
+      setBookingNote(live ? "Starting call…" : "Running dry-run…");
+      try {
+        const response = await fetch(`/api/manage/${token}/book`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ live }),
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          setBookingError(body.error || "Booking request failed.");
+          setBookingNote("");
+          return;
+        }
+        setBookingNote(body.note || "Booking request accepted.");
+        setCall(body.booking?.call ?? null);
+        setStatusUrl(body.statusUrl ?? null);
+      } catch {
+        setBookingError("Unable to reach the booking endpoint.");
+        setBookingNote("");
+      }
+    });
+  };
 
   return (
     <>
@@ -89,12 +156,57 @@ export function ManageDashboard({
 
       <section className="temporary-section">
         <h2>Ready to plan</h2>
-        <p>Booking, seating, and requirements connect in the next build slice.</p>
+        <p>
+          Book venue uses your configured test number by default. Live mode
+          places a real ElevenLabs/Twilio call when credentials are ready.
+        </p>
         <div className="temporary-actions">
-          <button disabled>Book venue</button>
-          <button disabled>Choose seating</button>
-          <button disabled>Add requirements</button>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => startBooking(false)}
+          >
+            Dry-run book
+          </button>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => startBooking(true)}
+          >
+            Live / mock call
+          </button>
+          <button type="button" disabled>
+            Choose seating
+          </button>
+          <button type="button" disabled>
+            Add requirements
+          </button>
         </div>
+        {bookingNote ? <p role="status">{bookingNote}</p> : null}
+        {bookingError ? (
+          <p className="form-error" role="alert">
+            {bookingError}
+          </p>
+        ) : null}
+        {call ? (
+          <div>
+            <p>
+              Call status: <strong>{call.status}</strong>
+              {call.outcome ? ` · ${call.outcome}` : ""}
+            </p>
+            {call.summary ? <p>{call.summary}</p> : null}
+            {call.error ? <p className="form-error">{call.error}</p> : null}
+            {call.transcript?.length ? (
+              <ul>
+                {call.transcript.map((line, index) => (
+                  <li key={`${line.atSeconds}-${index}`}>
+                    <strong>{line.role}</strong>: {line.message}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
       </section>
       {refreshError ? <p className="form-error" role="status">{refreshError}</p> : null}
     </>

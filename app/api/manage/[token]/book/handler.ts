@@ -1,10 +1,21 @@
 import type { EventRecord } from "../../../../../src/features/events/contracts";
 import {
+  buildEventBrief,
+  resolveDestination,
+  type BookRequestBody,
+} from "../../../../../src/features/booking/brief";
+import {
   describeConfig,
   loadConfig,
-  shouldUseRealAdapter,
   type EnvLike,
 } from "../../../../../src/integrations/elevenlabs/config";
+import {
+  createBookingAgentAdapter,
+} from "../../../../../src/integrations/elevenlabs/index";
+import type {
+  BookingAgentAdapter,
+  BookingCallResult,
+} from "../../../../../src/integrations/elevenlabs/types";
 
 type BookService = {
   getManagedEvent(token: string): Promise<{ event: EventRecord } | null>;
@@ -12,14 +23,16 @@ type BookService = {
 
 type BookHandlerOptions = {
   getEnv: () => EnvLike;
+  createAdapter?: (env: EnvLike) => BookingAgentAdapter;
 };
 
 /**
- * Management booking wireframe.
+ * Management booking endpoint.
  *
- * Defaults to dry-run so Twilio/ElevenLabs credentials can be present without
- * placing a live call. Pass `{ "live": true }` only after the Twilio number is
- * imported into ElevenLabs and a test destination is configured.
+ * Defaults to dry-run. Pass `{ "live": true }` to dispatch through the
+ * ElevenLabs adapter (real when credentials are present, mock otherwise).
+ * Live destinations are limited to ELEVENLABS_TEST_TO_NUMBER unless
+ * confirmRealVenue is explicitly true.
  */
 export function createBookHandler(
   service: BookService,
@@ -35,14 +48,15 @@ export function createBookHandler(
       return Response.json({ error: "Event not found." }, { status: 404 });
     }
 
-    const config = loadConfig(options.getEnv());
+    const env = options.getEnv();
+    const config = loadConfig(env);
     const readiness = describeConfig(config);
 
-    let body: { live?: boolean; toNumber?: string } = {};
+    let body: BookRequestBody = {};
     const raw = await request.text();
     if (raw.trim()) {
       try {
-        body = JSON.parse(raw) as typeof body;
+        body = JSON.parse(raw) as BookRequestBody;
       } catch {
         return Response.json(
           { error: "Send a valid booking request." },
@@ -52,21 +66,32 @@ export function createBookHandler(
     }
 
     const live = body.live === true;
-    const toNumber =
-      typeof body.toNumber === "string" && body.toNumber.trim()
-        ? body.toNumber.trim()
-        : config.testToNumber;
+    const destination = resolveDestination({
+      requestedToNumber:
+        typeof body.toNumber === "string"
+          ? body.toNumber
+          : typeof body.venuePhoneNumber === "string"
+            ? body.venuePhoneNumber
+            : undefined,
+      testToNumber: config.testToNumber,
+      confirmRealVenue: body.confirmRealVenue,
+    });
 
-    if (!toNumber) {
+    if (!destination.ok) {
       return Response.json(
-        {
-          error:
-            "Provide toNumber or set ELEVENLABS_TEST_TO_NUMBER for test calls.",
-          readiness,
-        },
+        { error: destination.error, readiness },
         { status: 400 },
       );
     }
+
+    const toNumber = destination.toNumber;
+    const brief = buildEventBrief(managed.event, {
+      toNumber,
+      venueName: body.venueName,
+      hostName: body.hostName,
+      seatingPreference: body.seatingPreference,
+      dietaryNotes: body.dietaryNotes,
+    });
 
     if (!live) {
       return Response.json({
@@ -77,30 +102,37 @@ export function createBookHandler(
             agentId: config.agentId ?? null,
             phoneNumberId: config.agentPhoneNumberId ?? null,
             toNumber,
+            brief,
           },
         },
         readiness,
         eventId: managed.event.id,
         note:
-          'Dry run only. Pass { "live": true } after Twilio is linked in ElevenLabs.',
+          'Dry run only. Pass { "live": true } to dispatch a call (test number by default).',
       });
     }
 
-    if (!shouldUseRealAdapter(config)) {
+    const adapter = (options.createAdapter ?? createBookingAgentAdapter)(env);
+    const result: BookingCallResult = await adapter.startBookingCall(brief);
+    const mode = readiness.usingRealAdapter ? "live" : "mock";
+
+    if (result.status === "failed") {
       return Response.json(
         {
-          error: "Live outbound calling is not configured yet.",
-          missing: readiness.missingCredentials,
+          error: result.error || "Booking call failed to start.",
+          booking: { ok: false, mode, call: result },
           readiness,
+          eventId: managed.event.id,
         },
-        { status: 400 },
+        { status: 502 },
       );
     }
 
     return Response.json({
       booking: {
         ok: true,
-        mode: "ready_for_live",
+        mode,
+        call: result,
         request: {
           agentId: config.agentId ?? null,
           phoneNumberId: config.agentPhoneNumberId ?? null,
@@ -109,8 +141,13 @@ export function createBookHandler(
       },
       readiness,
       eventId: managed.event.id,
+      statusUrl: result.externalId
+        ? `/api/manage/${token}/book/status?callId=${encodeURIComponent(result.externalId)}`
+        : null,
       note:
-        "Live credentials look ready. Use src/integrations/elevenlabs startBookingCall with a locked booking brief to place the call.",
+        mode === "live"
+          ? "Live outbound call dispatched through ElevenLabs Twilio."
+          : "Mock call started. Configure ElevenLabs credentials for a real call.",
     });
   };
 }
