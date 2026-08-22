@@ -5,8 +5,8 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** — current Base44 editor published; corrected
-  World Labs planet verified inside the public Plan-it guest experience
+- Last updated: **2026-08-22** — Base44 editor preview replaces sample planet
+  images with the corrected World Labs demo; public republish awaits approval
 
 ---
 
@@ -44,7 +44,7 @@ contracts.
 | World Labs integration | integrations agent | **Deployed + live verified** — miniature event-planetoid composition; text/image/multi-image and render assets retained | 2026-08-22 |
 | World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Deployed + live verified** — corrected planet panorama completed in 326s; Base44 public iframe verified | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
-| Finished Base44 UI | Base44 / Simon | **Done** — current editor published with live API adapter, world iframe/loading state and recap flow | 2026-08-22 |
+| Finished Base44 UI | Base44 / Simon | **Editor verified; republish pending** — live API adapter, dynamic event worlds, corrected demo-world placeholders, loading state and recap flow | 2026-08-22 |
 | View demo pipeline slideshow (`/pipeline`, mounted under create) | integrations agent | **Done** — dependency-free, embeddable | 2026-08-22 |
 | In-app world viewer (SparkJS, base + walk cameras) | unassigned | **Not started** — dependency-free panorama canvas ships instead; splat URLs already served | 2026-08-22 |
 | Connected Twilio caller number in ElevenLabs | human + ElevenLabs | **Blocked** until number import | 2026-08-22 |
@@ -80,6 +80,12 @@ contracts.
   ready, and retains an `Open world` fallback link. A production check of the
   `Sunset Picnic Planet` route rendered the live World Labs canvas with zero
   browser console errors; Base44 has no World Labs credential.
+- The next Base44 editor version replaces the landing hero, evolution demo
+  and pre-submit `/create` sample planet images with that corrected demo-world
+  iframe. Editor checks found no legacy `Planet preview` image on those
+  surfaces; real guest/manage routes still derive their event-specific
+  `worldUrl`. This editor version is **not public until Publish App is
+  confirmed**.
 - Open `/world/{slug}` — the embeddable canvas. It shows the generated
   panorama once Marble finishes, the deterministic planet until then, and
   one light per RSVP in every state.
@@ -491,6 +497,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | Base44 / coordination spine | Replaced fixture/sample planet photos in the Base44 editor with the verified `Sunset Picnic Planet` iframe on the landing hero, evolution demo, and pre-submit create preview. Preserved event-owned dynamic worlds and the lightweight fallback. Editor verification covered `/`, `/create`, the corrected guest route, and a fixture route with no console errors or credential exposure. Public republish is pending explicit approval. |
 | 2026-08-22 | Base44 / coordination spine | Published the current Base44 editor to `valiant-sync-orbit-plan.base44.app`, including the Sites-owned World Labs iframe, animated loading state, recap flow and 1–4 date support. Production verification loaded `Sunset Picnic Planet` on the public guest route, removed the loading state after iframe readiness, retained the fallback link, and reported zero console errors. No credential was copied into Base44. |
 | 2026-08-22 | coordination spine | Published Sites version 6 and spent one credit on `plan-it-demo-sunset-picnic-planet-121e48b5`. It completed in 326 seconds with `live: true`; the panorama and caption show a handcrafted circular floating event diorama with table, lanterns and Toronto cues on its surface, and visual inspection confirmed there is no interior-room composition. |
 | 2026-08-22 | integrations | Replaced World Labs' explicit photographic-interior prompt with the approved Plan-it composition: complete miniature floating event planet, elevated three-quarter camera, event landmarks on the upper hemisphere, tactile clay/painted-wood style, and explicit first-person/interior exclusions. Added five prompt regressions and updated the existing mapping expectations; subsequently live-verified in Sites version 6. |
