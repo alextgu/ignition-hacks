@@ -5,8 +5,8 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** — World Labs hosted secret configured and
-  applied to production; Base44 iframe handoff verified in editor preview
+- Last updated: **2026-08-22** — World Labs prompt corrected from a
+  first-person interior to Plan-it's miniature floating planet composition
 
 ---
 
@@ -41,7 +41,7 @@ contracts.
 | Base44-safe guest ID + CORS | coordination spine | **Done** | 2026-08-22 |
 | Unified + named friend links | coordination spine | **Backend deployed; Base44 preview verified** — public UI publish pending | 2026-08-22 |
 | Twilio/ElevenLabs live call path | coordination spine | **Done** — dry-run + live/mock dispatch + status poll | 2026-08-22 |
-| World Labs integration | integrations agent | **Done** — text/image/multi-image, render assets exposed | 2026-08-22 |
+| World Labs integration | integrations agent | **Planet prompt ready to publish** — text/image/multi-image and render assets retained; live visual recheck pending | 2026-08-22 |
 | World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Deployed + live verified** — real panorama completed in 338s; Base44 preview iframe handoff verified | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
 | Finished Base44 UI | Base44 / Simon | **Done** — published with live API adapter | 2026-08-22 |
@@ -422,6 +422,16 @@ with zero credentials because the mock adapter already simulates a call over
 
 ### World Labs app wiring — what is true after 2026-08-22
 
+- **Planet composition regression fixed in source.** The earlier production
+  credit exposed that the old mapper explicitly requested a photographic
+  restaurant interior, so Marble correctly produced the wrong product visual.
+  The mapper now asks for a complete miniature floating event planetoid from
+  an elevated three-quarter view, puts event landmarks on its upper surface,
+  uses a handcrafted editorial style, and explicitly excludes interior,
+  first-person and close-up compositions. Prompt regression tests cover the
+  camera, curved silhouette, landmark mapping and exclusions. A fresh live
+  credit is still required after deployment because completed worlds are
+  immutable by the one-generation rule.
 - **Verified live with one credit.** A fresh production event completed the
   full Marble path in 338 seconds: generate → operation stored → throttled
   polling → panorama, viewer link and caption persisted → canvas ready. The
@@ -471,6 +481,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | integrations | Replaced World Labs' explicit photographic-interior prompt with the approved Plan-it composition: complete miniature floating event planet, elevated three-quarter camera, event landmarks on the upper hemisphere, tactile clay/painted-wood style, and explicit first-person/interior exclusions. Added five prompt regressions and updated the existing mapping expectations; live visual recheck pending deployment. |
 | 2026-08-22 | coordination spine | Spent one World Labs credit on the production demo event `plan-it-demo-rooftop-planet-party-d05d0a02`. The real job completed in 338 seconds with `live: true`, a panorama, Marble viewer link, and caption; no duplicate generation was started. |
 | 2026-08-22 | coordination spine | Stored `WORLDLABS_API_KEY` only in the Sites runtime, set the hosted timeout to 20 seconds, and redeployed the existing validated version with environment revision 4. Base44 receives only `worldUrl`; no credential was copied into Base44. No live Marble credit was used. |
 | 2026-08-22 | coordination spine | Published Sites version 5 and verified the Base44 editor handoff end to end: create returns `worldUrl`; create success, guest, and host Planet reuse the same app-owned iframe; one RSVP adds state without regenerating; fixtures remain labelled fallbacks. No live Marble credit was used because no hosted key is configured. |

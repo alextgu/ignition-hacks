@@ -19,16 +19,24 @@ test("the host's own description and location survive into the prompt", () => {
   assert.match(prompt, /Toronto/);
 });
 
-test("event type is translated into an actual kind of room", () => {
-  assert.match(buildWorldPrompt(baseSeed), /restaurant dining room/i);
+test("event type becomes a miniature landmark on the planet surface", () => {
+  assert.match(buildWorldPrompt(baseSeed), /dining pavilion/i);
   assert.match(
     buildWorldPrompt({ ...baseSeed, eventType: "corporate offsite" }),
-    /private event room|boardroom/i
+    /meeting pavilion|boardroom table/i
   );
   assert.match(
     buildWorldPrompt({ ...baseSeed, eventType: "rooftop party" }),
-    /rooftop terrace|loft/i
+    /terrace|dance platform/i
   );
+});
+
+test("the composition is a complete miniature planet seen from above", () => {
+  const prompt = buildWorldPrompt(baseSeed);
+  assert.match(prompt, /miniature floating event planetoid/i);
+  assert.match(prompt, /entire (round|circular) silhouette/i);
+  assert.match(prompt, /elevated three-quarter/i);
+  assert.match(prompt, /angled down/i);
 });
 
 test("mood becomes light behaviour, not the emotion word", () => {
@@ -57,7 +65,7 @@ test("time character becomes the quality and direction of light", () => {
   assert.match(buildWorldPrompt(baseSeed), /golden sunlight|raking/i);
   assert.match(
     buildWorldPrompt({ ...baseSeed, timeCharacter: "late night" }),
-    /full dark|interior fixtures/i
+    /deep night sky|lantern/i
   );
 });
 
@@ -68,7 +76,7 @@ test("group size becomes concrete furniture, and scales", () => {
   assert.match(buildWorldPrompt({ ...baseSeed, groupSize: 24 }), /end to end/i);
 });
 
-test("the room is explicitly requested empty", () => {
+test("the planet is explicitly requested empty", () => {
   // Marble does not render human figures, and the app layers guest markers
   // over the scene, so asking for people wastes the generation.
   const prompt = buildWorldPrompt(baseSeed);
@@ -76,12 +84,20 @@ test("the room is explicitly requested empty", () => {
   assert.match(prompt, /no people/i);
 });
 
-test("the prompt carries a palette and spatial boundaries", () => {
+test("the prompt carries a palette and a curved planetary boundary", () => {
   const prompt = buildWorldPrompt(baseSeed);
   assert.match(prompt, /palette of/i);
-  assert.match(prompt, /floor/i);
-  assert.match(prompt, /ceiling/i);
-  assert.match(prompt, /sightlines/i);
+  assert.match(prompt, /curves away|curved edge/i);
+  assert.match(prompt, /upper hemisphere/i);
+  assert.match(prompt, /empty space around/i);
+});
+
+test("the prompt rejects the first-person interior composition", () => {
+  const prompt = buildWorldPrompt(baseSeed);
+  assert.match(prompt, /no interior room/i);
+  assert.match(prompt, /no first-person/i);
+  assert.match(prompt, /no close-up/i);
+  assert.doesNotMatch(prompt, /restaurant dining room|ceiling overhead|through the windows/i);
 });
 
 test("text, signage and logos are excluded", () => {

@@ -7,21 +7,22 @@ import type { WorldSeed } from "./types.ts";
  * "mid-range", "golden hour". Marble cannot render any of those directly.
  * Its own guidance asks for a specific location described with concrete,
  * spatial, sensory detail, and warns against abstract emotions, narrative
- * description, and 2D painting language. The community prompt guide
- * distills the structure that works as:
+ * description, and flat decorative imagery. Plan-it deliberately makes that
+ * location a small floating event planet rather than a conventional room.
+ * The structure that works is:
  *
- *   [architecture / space] + [materials] + [lighting & time] + [scale] +
- *   [colour palette] + [boundaries]
+ *   [planet composition] + [event landmark] + [materials] +
+ *   [lighting & time] + [miniature scale] + [curved boundary]
  *
  * So the job of this file is translation: each vague form answer is mapped
  * onto renderable physical language before the prompt is assembled in that
  * order. "cozy" becomes low warm pools of lamplight and deep corner
  * shadows; "mid-range" becomes oak, tile and brass. That mapping is the
- * difference between a generic room and a room worth looking at.
+ * difference between a generic interior and the recognizable Plan-it planet.
  *
  * Two deliberate choices worth knowing:
  *
- *  - **The room is asked for empty.** Marble does not generate human
+ *  - **The planet is asked for empty.** Marble does not generate human
  *    figures, and the product layers guest markers over the scene anyway,
  *    so the prompt asks for set-but-unoccupied places. Asking for people
  *    would waste the request and produce artefacts.
@@ -51,31 +52,31 @@ function pick(phrases: Phrase[], value: string): string {
   return tryPick(phrases, value) ?? phrases[0].text;
 }
 
-/** Event type -> the kind of room it happens in. */
+/** Event type -> a small landmark arranged on the planet's upper surface. */
 const SPACES: Phrase[] = [
   {
     match: ["dinner", "birthday", "anniversary", "celebration", "date"],
-    text: "an intimate restaurant dining room with a low ceiling and a long shared table",
+    text: "a tiny open-air dining pavilion with a curved canopy and a long shared table",
   },
   {
     match: ["party", "night out", "cocktail", "housewarming"],
-    text: "an open loft event space with tall windows, a bar along one wall and clustered standing tables",
+    text: "a tiny circular dance platform, a sculptural bar kiosk and clustered cocktail tables",
   },
   {
     match: ["corporate", "offsite", "meeting", "networking", "mixer", "work"],
-    text: "a private event room with a boardroom-length table, panelled walls and a serving credenza",
+    text: "a small open-sided meeting pavilion with a boardroom table and a serving kiosk",
   },
   {
     match: ["brunch", "coffee", "cafe", "lunch"],
-    text: "a bright corner cafe with small marble-topped tables and bentwood chairs",
+    text: "a tiny cafe terrace with marble-topped tables, bentwood chairs and a striped canopy",
   },
   {
     match: ["hangout", "casual", "chill", "catch up", "meetup"],
-    text: "a relaxed neighbourhood bistro with worn banquette seating and a scuffed wooden bar",
+    text: "a sunken circular lounge with curved banquettes, low tables and a tiny drinks kiosk",
   },
   {
     match: ["picnic", "park", "outdoor", "patio", "rooftop", "garden"],
-    text: "a sheltered rooftop terrace with planters, string lights overhead and a city skyline beyond the railing",
+    text: "a stepped rooftop terrace landmark with planters, string lights and a small dance platform",
   },
 ];
 
@@ -83,15 +84,15 @@ const SPACES: Phrase[] = [
 const MOODS: Phrase[] = [
   {
     match: ["cozy", "cosy", "warm", "intimate", "relaxed", "comfortable"],
-    text: "Low warm pools of light from table lamps and candles, deep soft shadows in the corners, the far end of the room falling into darkness",
+    text: "Low warm pools of light from miniature lanterns and table candles, with soft shadows beneath the tiny structures",
   },
   {
     match: ["energetic", "lively", "fun", "loud", "festive", "celebratory"],
-    text: "Bright even light with warm spill from pendant fixtures, a few saturated colour washes across the back wall, no deep shadow",
+    text: "Bright even light with warm lantern spill and a few saturated colour washes across the dance platform, with no deep shadow",
   },
   {
     match: ["elegant", "formal", "refined", "upscale", "classy", "fancy"],
-    text: "Restrained warm downlights picking out the table settings, soft highlights on glass and metal, the walls held in gentle shadow",
+    text: "Restrained warm lanterns picking out the table settings, with soft highlights on glass and metal",
   },
   {
     match: ["quiet", "calm", "peaceful", "low key", "mellow"],
@@ -99,7 +100,7 @@ const MOODS: Phrase[] = [
   },
   {
     match: ["rustic", "homey", "old", "vintage", "traditional"],
-    text: "Warm uneven light from mismatched fixtures, visible dust in the beams, shadows pooling under the furniture",
+    text: "Warm uneven light from mismatched lanterns, visible dust in the beams and shadows pooling under the furniture",
   },
 ];
 
@@ -107,15 +108,15 @@ const MOODS: Phrase[] = [
 const MATERIALS: Phrase[] = [
   {
     match: ["mid", "moderate", "reasonable", "standard", "middle"],
-    text: "Solid oak tables, patterned tile floor, plaster walls, brass fixtures and simple stoneware",
+    text: "Solid oak tables, patterned tile paths, small plaster structures, brass fixtures and simple stoneware",
   },
   {
     match: ["budget", "cheap", "affordable", "casual", "low", "inexpensive"],
-    text: "Scuffed pine tabletops, painted brick, vinyl bench seating, exposed conduit overhead and mismatched glassware",
+    text: "Scuffed pine tabletops, painted brick kiosks, canvas bench seating and mismatched glassware",
   },
   {
     match: ["splurge", "expensive", "premium", "luxury", "high", "upscale", "fine"],
-    text: "Polished marble and dark walnut surfaces, velvet banquettes, brass and cut crystal, heavy linen and a thick carpeted floor",
+    text: "Polished marble and dark walnut surfaces, velvet banquettes, brass and cut crystal, heavy linen and clipped dark-green planting",
   },
 ];
 
@@ -123,19 +124,19 @@ const MATERIALS: Phrase[] = [
 const TIMES: Phrase[] = [
   {
     match: ["golden", "sunset", "dusk", "evening", "early evening"],
-    text: "Low golden sunlight raking in almost horizontally through tall windows, long shadows stretched across the floor",
+    text: "Low golden sunlight raking across the curved planet surface, with long shadows from every miniature structure",
   },
   {
     match: ["night", "late", "midnight", "dark"],
-    text: "Full dark outside the windows with the glass reflecting the room back, all light coming from warm interior fixtures",
+    text: "A deep night sky around the planet, with all light coming from warm miniature lanterns and table candles",
   },
   {
     match: ["morning", "sunrise", "breakfast", "early"],
-    text: "Cool pale morning light from one side, the air still and slightly hazy",
+    text: "Cool pale morning light from one side, with a soft haze around the planet edge",
   },
   {
     match: ["midday", "noon", "afternoon", "day", "bright"],
-    text: "Bright neutral daylight flooding in from large windows, crisp shadows under the furniture",
+    text: "Bright neutral daylight across the whole planetoid, with crisp shadows under the furniture",
   },
   {
     match: ["winter", "snow", "cold"],
@@ -183,35 +184,48 @@ export function buildWorldPrompt(seed: WorldSeed): string {
 
   const parts: string[] = [];
 
-  // 1. Architecture / space, anchored to the host's own words.
-  parts.push(`${sentenceCase(space)}.`);
+  // 1. Lock the composition before describing details. Without these camera
+  // and boundary instructions Marble tends to turn event words into a
+  // first-person restaurant interior.
+  parts.push(
+    "A miniature floating event planetoid diorama suspended in open sky, seen from an elevated three-quarter viewpoint with the camera angled down about 35 degrees."
+  );
+  parts.push(
+    "The entire round silhouette and curved edge of the planet are visible at once, with generous empty space around it."
+  );
+
+  // 2. Event landmark, anchored to the host's own words.
+  parts.push(`On the upper surface sits ${space}.`);
   if (description) parts.push(`${sentenceCase(description)}.`);
   if (location) {
     parts.push(
-      `The view through the windows is a ${location} street at this hour, softly out of focus.`
+      `Tiny abstract landscape and skyline cues inspired by ${location} sit along one edge of the surface, never becoming a full-sized city.`
     );
   }
 
-  // 2. Materials. 3. Lighting and time.
+  // 3. Materials. 4. Lighting and time.
   parts.push(`${materials}.`);
   parts.push(`${lighting}.`);
   parts.push(`${timeOfDay}.`);
 
-  // 4. Explicit scale, and the room deliberately left empty.
+  // 5. Explicit miniature scale, deliberately left empty.
   parts.push(
-    `Scaled for ${groupSize} ${groupSize === 1 ? "person" : "people"}: ${seatingFor(
+    `Miniature seating scaled for ${groupSize} ${groupSize === 1 ? "person" : "people"}: ${seatingFor(
       groupSize
     )}, set with plates and glassware but completely unoccupied, no people anywhere in the scene.`
   );
 
-  // 5. Palette. 6. Ground, ceiling and boundaries.
+  // 6. Palette and a planetary ground boundary Marble can reconstruct.
   parts.push(`${palette}.`);
   parts.push(
-    "Continuous floor with visible material detail, a clearly defined ceiling overhead, and clear sightlines from the centre of the room to every wall."
+    "One continuous rounded ground surface visibly curves away on every side into a clean circular edge; every landmark stays on the upper hemisphere, with clear foreground, middle distance and background depth."
   );
 
   parts.push(
-    "Photographic interior, physically plausible proportions, no text, no signage, no logos."
+    "Stylized handcrafted clay-and-painted-wood miniature, contemporary editorial 3D illustration, softly rounded forms and tactile detail, not photographic realism."
+  );
+  parts.push(
+    "No interior room, no enclosing walls, no ceiling, no first-person or eye-level view, no close-up, no flat map, no giant full-scale landscape, no text, no signage, no logos."
   );
 
   return capLength(parts.join(" ").replace(/\s+/g, " ").trim());
@@ -227,7 +241,7 @@ export function buildWorldDisplayName(seed: WorldSeed): string {
 
 /** Turns a headcount into concrete furniture rather than a number. */
 function seatingFor(groupSize: number): string {
-  if (groupSize <= 2) return "one small two-top by the window";
+  if (groupSize <= 2) return "one small two-top beside a lantern";
   if (groupSize <= 4) return "a single square table with four chairs";
   if (groupSize <= 8) return `one long table with ${groupSize} chairs drawn up to it`;
   if (groupSize <= 16) {
