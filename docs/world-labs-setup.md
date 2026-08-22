@@ -255,3 +255,74 @@ src/integrations/worldlabs/
 Shared with other integrations:
   src/integrations/shared/httpJson.ts   fetch wrapper: timeout + normalized failure handling
 ```
+
+---
+
+## How the app uses this module (added 2026-08-22)
+
+The adapter above is the *client*. This section is the wiring around it —
+where generation is triggered, what is stored, and what reaches the browser.
+Owned by the coordination spine; see `SSOT.md` §3 for the public contract.
+
+### Lifecycle
+
+| Step | Where | Notes |
+|---|---|---|
+| Build the seed | `src/features/world/seed.ts` | Redacts the description; never reads the event title or attendees |
+| Start generation | `POST /api/events` → `worldService.startGeneration` | Exactly once per event, guarded by the stored operation id |
+| Persist | `events.world_*` columns | Operation id, marble URL, thumbnail, panorama, 100k/500k splats, caption, timings, error |
+| Poll | `GET /api/events/{slug}/world` | At most once per 10s per event, regardless of viewers |
+| Render | `/world/{slug}` | Panorama when ready, planet fallback otherwise |
+
+Generation is started at creation and, as a safety net, on the first canvas
+view of any event that never got one (`ensureStarted`). `world_started_at` is
+written on the first attempt whatever the outcome, so a permanently failing
+world is attempted once rather than on every page view.
+
+### What is never sent to World Labs
+
+The generated world is public, so the seed excludes anything identifying:
+
+- The event **title** — hosts write "Priya's birthday" in titles.
+- The management token, public slug, and every attendee field.
+- Emails, phone numbers, URLs, bare domains and @handles in the host's
+  description, stripped by `redactCreativeText` before the prompt is built.
+
+Redaction of free text is best-effort — it cannot catch every personal name —
+so the host form should keep warning against personal details. Verified by
+`tests/world-domain.test.ts`, which asserts a description containing a phone
+number, an email and a domain reaches the API with none of them.
+
+### Honest labelling
+
+`PublicWorldState.world.live` is false when no key is configured **and** for
+worlds produced by the offline fallback before a key was added — those are
+detected by their `data:` asset URLs. The canvas only says "World Labs world"
+when `live` is true; otherwise it says it is a preview. Never remove this:
+showing the fallback as a generated world is a false claim to judges.
+
+### Verifying without spending credits
+
+The whole live path can be exercised against a local stub of the Marble API —
+this is how the wiring was verified. Point the base URL at a stub that returns
+an operation for `POST /marble/v1/worlds:generate` and a done operation for
+`GET /marble/v1/operations/{id}`, then put both values in `.dev.vars`:
+
+```
+WLT_API_KEY=any-non-empty-value
+WORLDLABS_BASE_URL=http://127.0.0.1:8787
+```
+
+`.dev.vars` is git-ignored and read automatically by `vinext dev`. Delete it
+to go back to the deterministic fallback.
+
+### Deployment checklist
+
+1. Set `WLT_API_KEY` in the hosted environment (it is read from the Worker
+   binding, not from a build-time value).
+2. Consider `WORLDLABS_TIMEOUT_MS=8000` so a slow upstream cannot stall
+   event creation.
+3. The world columns are added by additive `ALTER TABLE` statements at
+   startup — no manual migration step, and safe to run repeatedly.
+4. Check `/world/{slug}` embeds from the Base44 origin. The Worker sets no
+   framing headers today; if a CSP is added later it must allow that origin.

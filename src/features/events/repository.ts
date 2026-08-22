@@ -6,6 +6,7 @@ import type {
   EventRecord,
   InvitationRecord,
   PriceResponse,
+  WorldStatePatch,
 } from "./contracts";
 
 export type EventsRepository = {
@@ -15,6 +16,8 @@ export type EventsRepository = {
   findAttendee(eventId: string, guestId: string): Promise<AttendeeRecord | null>;
   listAttendees(eventId: string): Promise<AttendeeRecord[]>;
   upsertAttendee(attendee: AttendeeRecord): Promise<AttendeeRecord>;
+  /** Writes World Labs generation state. Only the given keys are touched. */
+  updateWorldState(eventId: string, patch: WorldStatePatch): Promise<void>;
   insertInvitations(
     records: InvitationRecord[],
   ): Promise<InvitationRecord[]>;
@@ -45,6 +48,15 @@ function toEventRecord(row: EventRow): EventRecord {
     worldStatus: row.worldStatus as EventRecord["worldStatus"],
     worldEmbedUrl: row.worldEmbedUrl,
     worldPreviewImageUrl: row.worldPreviewImageUrl,
+    worldExternalId: row.worldExternalId,
+    worldPanoUrl: row.worldPanoUrl,
+    worldSplatLowUrl: row.worldSplatLowUrl,
+    worldSplatMediumUrl: row.worldSplatMediumUrl,
+    worldCaption: row.worldCaption,
+    worldError: row.worldError,
+    worldStartedAt: row.worldStartedAt,
+    worldCompletedAt: row.worldCompletedAt,
+    worldLastCheckedAt: row.worldLastCheckedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -175,6 +187,7 @@ export function createD1EventsRepository(
       return saved;
     },
 
+
     async insertInvitations(records) {
       await ensureReady();
       if (records.length === 0) return [];
@@ -205,5 +218,23 @@ export function createD1EventsRepository(
         .where(eq(invitations.eventId, eventId));
       return rows.map(toInvitationRecord);
     },
+
+    async updateWorldState(eventId, patch) {
+      await ensureReady();
+      // Build the update from present keys only. A patch that clears a
+      // column passes an explicit null; an absent key must leave the stored
+      // value alone, so `undefined` and `null` cannot be conflated here.
+      const values: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(patch)) {
+        if (value !== undefined) values[key] = value;
+      }
+      if (Object.keys(values).length === 0) return;
+
+      await database
+        .update(events)
+        .set(values)
+        .where(eq(events.id, eventId));
+    },
+
   };
 }

@@ -1,4 +1,4 @@
-type PreparedStatement = unknown;
+type PreparedStatement = { run?: () => Promise<unknown> } | unknown;
 
 export type D1SchemaBinding = object & {
   prepare(sql: string): PreparedStatement;
@@ -21,6 +21,15 @@ const schemaStatements = [
     world_status text DEFAULT 'pending' NOT NULL,
     world_embed_url text,
     world_preview_image_url text,
+    world_external_id text,
+    world_pano_url text,
+    world_splat_low_url text,
+    world_splat_medium_url text,
+    world_caption text,
+    world_error text,
+    world_started_at text,
+    world_completed_at text,
+    world_last_checked_at text,
     created_at text NOT NULL,
     updated_at text NOT NULL
   )`,
@@ -54,6 +63,45 @@ const schemaStatements = [
     ON events(management_token)`,
 ] as const;
 
+/**
+ * Additive column migrations for databases created before a column existed.
+ *
+ * `CREATE TABLE IF NOT EXISTS` above is a no-op on the deployed database,
+ * which already holds real events — so new columns have to arrive as ALTERs.
+ * SQLite has no `ADD COLUMN IF NOT EXISTS`, and these run outside the batch
+ * on purpose: a batch is atomic, so one "duplicate column name" would roll
+ * back the whole schema setup. Run individually, an already-applied ALTER is
+ * just an expected error to swallow.
+ *
+ * Every entry must stay backwards compatible: nullable, no default that
+ * changes existing rows, never a rename or a drop.
+ */
+const migrationStatements = [
+  `ALTER TABLE events ADD COLUMN world_external_id text`,
+  `ALTER TABLE events ADD COLUMN world_pano_url text`,
+  `ALTER TABLE events ADD COLUMN world_splat_low_url text`,
+  `ALTER TABLE events ADD COLUMN world_splat_medium_url text`,
+  `ALTER TABLE events ADD COLUMN world_caption text`,
+  `ALTER TABLE events ADD COLUMN world_error text`,
+  `ALTER TABLE events ADD COLUMN world_started_at text`,
+  `ALTER TABLE events ADD COLUMN world_completed_at text`,
+  `ALTER TABLE events ADD COLUMN world_last_checked_at text`,
+] as const;
+
+async function applyMigrations(binding: D1SchemaBinding) {
+  for (const statement of migrationStatements) {
+    try {
+      const prepared = binding.prepare(statement) as {
+        run?: () => Promise<unknown>;
+      };
+      await prepared.run?.();
+    } catch {
+      // Already applied. This is the normal path on every request after the
+      // first deploy, so it must stay silent rather than logged.
+    }
+  }
+}
+
 export function createDatabaseInitializer() {
   const initializations = new WeakMap<object, Promise<void>>();
 
@@ -63,6 +111,7 @@ export function createDatabaseInitializer() {
 
     const initialization = binding
       .batch(schemaStatements.map((statement) => binding.prepare(statement)))
+      .then(() => applyMigrations(binding))
       .then(() => undefined)
       .catch((error) => {
         initializations.delete(binding);

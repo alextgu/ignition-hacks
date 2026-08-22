@@ -5,7 +5,8 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** — merge of Sites/Base44 live spine + World Labs multimodal/render assets
+- Last updated: **2026-08-22** — World Labs wired into the app (generation on
+  create, D1 persistence, public world API, embeddable `/world/{slug}` canvas)
 
 ---
 
@@ -41,9 +42,10 @@ contracts.
 | Unified + named friend links | coordination spine | **Backend deployed; Base44 preview verified** — public UI publish pending | 2026-08-22 |
 | Twilio/ElevenLabs live call path | coordination spine | **Done** — dry-run + live/mock dispatch + status poll | 2026-08-22 |
 | World Labs integration | integrations agent | **Done** — text/image/multi-image, render assets exposed | 2026-08-22 |
+| World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Done** — live path verified against a stubbed Marble API | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
 | Finished Base44 UI | Base44 / Simon | **Done** — published with live API adapter | 2026-08-22 |
-| In-app world viewer (SparkJS, base + walk cameras) | unassigned | **Not started** — needs `three` + `@sparkjsdev/spark` | 2026-08-22 |
+| In-app world viewer (SparkJS, base + walk cameras) | unassigned | **Not started** — dependency-free panorama canvas ships instead; splat URLs already served | 2026-08-22 |
 | Connected Twilio caller number in ElevenLabs | human + ElevenLabs | **Blocked** until number import | 2026-08-22 |
 | Event lock-in + booking-attempt persistence | coordination spine | **Not started** | 2026-08-22 |
 
@@ -63,6 +65,14 @@ contracts.
 - Live dials are limited to `ELEVENLABS_TEST_TO_NUMBER` unless `confirmRealVenue` is true.
 - Verify `POST /api/webhooks/elevenlabs` HMAC signatures when configured.
 - Run integration mocks with zero credentials via `src/integrations/**`.
+- Creating an event now starts **exactly one** Marble generation, and the
+  event is usable immediately whether or not it succeeds.
+- Open `/world/{slug}` — the embeddable canvas. It shows the generated
+  panorama once Marble finishes, the deterministic planet until then, and
+  one light per RSVP in every state.
+- Read `GET /api/events/{slug}/world` for redacted canvas state.
+- See the world on the guest page: `/e/{slug}` embeds the same iframe URL
+  Base44 uses, so the handoff contract is exercised on every visit.
 
 ### Production backend connectivity audit (2026-08-22)
 
@@ -170,6 +180,50 @@ Usage notes for the app:
 - With no API key, the mock returns `ready` **instantly** with a real
   data-URI planet preview and animated embed page. The flow always works.
 
+### World Labs — app surface (`src/features/world`, added 2026-08-22)
+
+```ts
+// GET /api/events/{slug}/world  ->  PublicWorldState
+type PublicWorldState = {
+  event: { title: string; description: string; location: string; groupSize: number };
+  world: {
+    status: "pending" | "ready" | "failed";
+    live: boolean;            // a real key produced this world
+    marbleUrl: string | null; // link out to the World Labs viewer
+    thumbnailUrl: string | null;
+    panoUrl: string | null;   // what the canvas renders
+    splatLowUrl: string | null;
+    splatMediumUrl: string | null;
+    caption: string | null;
+    elapsedSeconds: number | null;
+  };
+  presentation: {
+    stage: "seed" | "gathering" | "ready" | "booked";
+    attendeeCount: number;
+    attendees: Array<{ label: string; avatarIndex: number }>;
+  };
+};
+```
+
+`POST /api/events` now also returns `worldUrl`. Base44 needs nothing else:
+
+```html
+<iframe src="{worldUrl}" title="Interactive event world" loading="lazy" allow="fullscreen"></iframe>
+```
+
+Rules this surface guarantees:
+
+- **One generation per event, ever.** Started at creation, guarded by the
+  stored operation id; RSVPs never regenerate.
+- **A pending operation is polled at most once per 10s per event**, however
+  many people have the canvas open.
+- **`live: false` means the canvas must not claim a World Labs world.** It is
+  false with no key configured *and* for worlds produced by the offline
+  fallback before a key was added (detected by their `data:` asset URLs).
+- **Nothing private leaves.** No management token, guest id, operation id,
+  provider error, or full-resolution splat URL. Guest names are reduced to a
+  first name for the lantern labels.
+
 ### ElevenLabs booking agent — `src/integrations/elevenlabs`
 
 ```ts
@@ -246,6 +300,11 @@ guest identity; it does not depend on cross-site cookies.
 | `WORLDLABS_TIMEOUT_MS` | no | `15000` | Per-call timeout |
 | `WORLDLABS_FORCE_MOCK` | no | `false` | Force the mock |
 
+With no key the app still works end to end: every event gets the
+deterministic planet, and the canvas says so rather than claiming a
+generated world. Set `WLT_API_KEY` in the hosted environment to turn on real
+generation — nothing else changes.
+
 ### ElevenLabs
 
 | Variable | Required | Default | Purpose |
@@ -279,9 +338,9 @@ falls back to the mock rather than failing at call time.
 | 4 | Same browser can't create duplicate attendees | ✅ Base44 + Sites |
 | 4a | Named friend link can't create duplicate attendees across browsers | ✅ Sites live + Base44 preview; public UI publish pending |
 | 5 | Host sees a clear consensus summary | ✅ Base44 + Sites |
-| 6 | Recognizable spatial-art experience with dependable fallback | ✅ Planetoid fallback; World Labs integration ready |
+| 6 | Recognizable spatial-art experience with dependable fallback | ✅ **Live** — `/world/{slug}` renders the generated panorama, planet fallback otherwise |
 | 7 | Ready-to-plan state with booking/seating/requirements actions | ✅ Honest pending/dry-run UI |
-| 8 | Shared link has event-specific preview text and imagery | ❌ needs app (`previewImageUrl` is ready to use) |
+| 8 | Shared link has event-specific preview text and imagery | ✅ `/e/{slug}` sets OG/Twitter title, description and `previewImageUrl` |
 
 **Critical path to a demo:** event lock-in, durable booking attempts, and a
 connected ElevenLabs caller number. The complete create → RSVP → admin story
@@ -354,12 +413,35 @@ with zero credentials because the mock adapter already simulates a call over
 - **Never render `needs_followup` as a booking.** Criterion for not
   embarrassing ourselves in front of judges.
 
+### World Labs app wiring — what is true after 2026-08-22
+
+- **Verified without spending a credit.** The real adapter was exercised
+  against a local stub of the Marble API: generate → operation stored →
+  throttle honoured → poll → panorama, splats and caption persisted → canvas
+  switched to the live world. No live generation has been run yet.
+- **Redaction is enforced at the seed, and tested.** The event *title* is
+  never sent (hosts put names in titles), and the description is stripped of
+  emails, phone numbers, URLs, bare domains and @handles first. A test
+  asserts a phone/email/domain description reaches Marble with none of them.
+- **First names only** reach the public canvas payload, not full names.
+- **Latency:** `POST /api/events` now awaits the generate call. It is a
+  queue-and-return endpoint, but consider `WORLDLABS_TIMEOUT_MS=8000` in the
+  hosted environment so a slow upstream can't stall event creation. The
+  request is awaited on purpose — Cloudflare may cancel a promise that
+  outlives its response, so fire-and-forget would silently drop generation.
+- **Frameability:** the Worker sets no `X-Frame-Options`/`frame-ancestors`,
+  so `/world/{slug}` embeds cross-origin as-is. If a CSP is ever added, it
+  must allow the Base44 origin.
+- **Still open:** the SparkJS splat viewer. `splatLowUrl`/`splatMediumUrl`
+  are already served, so it is an additive upgrade, not a rewrite. The
+  panorama canvas needs no dependencies and is the reliable default.
+
 ### Cross-module requests
 _(Need a change in someone else's files? Write it here instead of editing
 them.)_
 
-- **To coordination spine:** add `world_external_id` and
-  `booking_call_external_id` opaque strings on events when lock-in lands.
+- **To coordination spine:** add `booking_call_external_id` on events when
+  lock-in lands. (`world_external_id` — **done**, with the world columns.)
 - **To integrations:** webhook persistence should update booking attempts once
   the spine adds that table; current route only verifies signatures.
 - **Resolved:** `.env.example` and Sites `package.json` now exist on main.
@@ -381,6 +463,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | coordination spine | Wired World Labs into the app: one generation per event at creation, 9 new D1 world columns with additive migrations, `GET /api/events/{slug}/world`, and the embeddable `/world/{slug}` canvas (panorama + guest lanterns, planet fallback, no new dependencies). Added the canvas to `/e/{slug}`. 22 new tests; live path verified against a stubbed Marble API. |
 | 2026-08-22 | coordination spine | Live call path: book route dispatches via ElevenLabs adapter, status poll endpoint, manage harness buttons, test-number safety gate. |
 | 2026-08-22 | coordination spine | Published Sites version 4 and production-audited named invitation creation, repeat RSVP update, and host recovery. Wired the existing Base44 preview through direct `planitApi` calls; independently verified named prefill, invalid-token fail-closed behavior, and host recovery. Public Base44 publish remains pending approval. |
 | 2026-08-22 | coordination spine | Added persistent named friend invitations, host-only link creation/recovery, invitation-owned cross-device RSVP identity, and a query-preserving temporary RSVP harness. Unified links remain supported. |

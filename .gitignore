@@ -32,6 +32,9 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
+# wrangler local dev vars (real keys, or a stub base URL for testing)
+.dev.vars
+.dev.vars.*
 
 # vercel
 .vercel

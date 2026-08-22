@@ -51,6 +51,24 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         <div><dt>Estimate</dt><dd>${event.priceMin}–${event.priceMax} / person</dd></div>
         <div><dt>Group</dt><dd>About {event.groupSize} people</dd></div>
       </dl>
+      <section className="temporary-section" aria-label="Event world">
+        <h2>Your world</h2>
+        <p>
+          Generated once from the idea itself, and it fills with light as
+          people answer.
+        </p>
+        {/* Same URL Base44 embeds. Keeping the guest page on the iframe
+            rather than on the component means the handoff contract is
+            exercised on every visit instead of only in production. */}
+        <iframe
+          className="world-frame"
+          src={`/world/${slug}`}
+          title={`Interactive world for ${event.title}`}
+          loading="lazy"
+          allow="fullscreen"
+        />
+      </section>
+
       <RsvpForm
         slug={slug}
         timeOptions={event.timeOptions}

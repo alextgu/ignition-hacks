@@ -468,3 +468,20 @@ input:focus, textarea:focus, .money-input:focus-within {
 @media (max-width: 560px) {
   .temporary-details { grid-template-columns: 1fr; }
 }
+
+/* Embedded World Labs canvas (see app/world/[slug]). Fixed aspect so the
+   iframe reserves its space before it loads and never reflows the RSVP
+   form underneath it. */
+.world-frame {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  max-height: 60vh;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #0b0a09;
+}
+
+@media (max-width: 560px) {
+  .world-frame { aspect-ratio: 4 / 3; }
+}

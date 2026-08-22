@@ -15,6 +15,17 @@ export const events = sqliteTable("events", {
   worldStatus: text("world_status").notNull().default("pending"),
   worldEmbedUrl: text("world_embed_url"),
   worldPreviewImageUrl: text("world_preview_image_url"),
+  // World Labs generation state. All nullable: an event is fully usable
+  // before, during and after generation, and may never have a world at all.
+  worldExternalId: text("world_external_id"),
+  worldPanoUrl: text("world_pano_url"),
+  worldSplatLowUrl: text("world_splat_low_url"),
+  worldSplatMediumUrl: text("world_splat_medium_url"),
+  worldCaption: text("world_caption"),
+  worldError: text("world_error"),
+  worldStartedAt: text("world_started_at"),
+  worldCompletedAt: text("world_completed_at"),
+  worldLastCheckedAt: text("world_last_checked_at"),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
