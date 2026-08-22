@@ -5,8 +5,8 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** — Base44 editor preview replaces sample planet
-  images with the corrected World Labs demo; public republish awaits approval
+- Last updated: **2026-08-22** — Base44 editor preview now uses clickable,
+  live-updating planet covers; public republish awaits approval
 
 ---
 
@@ -44,7 +44,7 @@ contracts.
 | World Labs integration | integrations agent | **Deployed + live verified** — miniature event-planetoid composition; text/image/multi-image and render assets retained | 2026-08-22 |
 | World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Deployed + live verified** — corrected planet panorama completed in 326s; Base44 public iframe verified | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
-| Finished Base44 UI | Base44 / Simon | **Editor verified; republish pending** — live API adapter, dynamic event worlds, corrected demo-world placeholders, loading state and recap flow | 2026-08-22 |
+| Finished Base44 UI | Base44 / Simon | **Editor verified; republish pending** — live API adapter, clickable live planet covers, dynamic event worlds, loading state and recap flow | 2026-08-22 |
 | View demo pipeline slideshow (`/pipeline`, mounted under create) | integrations agent | **Done** — dependency-free, embeddable | 2026-08-22 |
 | In-app world viewer (SparkJS, base + walk cameras) | unassigned | **Not started** — dependency-free panorama canvas ships instead; splat URLs already served | 2026-08-22 |
 | Connected Twilio caller number in ElevenLabs | human + ElevenLabs | **Blocked** until number import | 2026-08-22 |
@@ -80,12 +80,18 @@ contracts.
   ready, and retains an `Open world` fallback link. A production check of the
   `Sunset Picnic Planet` route rendered the live World Labs canvas with zero
   browser console errors; Base44 has no World Labs credential.
-- The next Base44 editor version replaces the landing hero, evolution demo
-  and pre-submit `/create` sample planet images with that corrected demo-world
-  iframe. Editor checks found no legacy `Planet preview` image on those
-  surfaces; real guest/manage routes still derive their event-specific
-  `worldUrl`. This editor version is **not public until Publish App is
-  confirmed**.
+- The next Base44 editor version starts the landing hero, evolution demo,
+  pre-submit `/create`, guest and manage world panels on a titled illustrated
+  planet cover. `Explore planet` mounts exactly one event-owned World Labs
+  iframe in place; `Back to planet` unmounts it. Real guest/manage covers poll
+  existing API state every 5 seconds while visible, pause in hidden tabs,
+  preserve the last good state on errors, and refresh immediately after an
+  RSVP. The Sites iframe retains its independent 20-second RSVP-lantern poll;
+  no World Labs regeneration occurs. Editor checks passed on landing, create,
+  corrected guest and manage-fixture routes with no console errors or
+  credential exposure. Base44 has no automated test runner, so these were
+  browser behavior checks. This editor version is **not public until Publish
+  App is confirmed**.
 - Open `/world/{slug}` — the embeddable canvas. It shows the generated
   panorama once Marble finishes, the deterministic planet until then, and
   one light per RSVP in every state.
@@ -497,6 +503,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | Base44 / coordination spine | Changed World Labs presentation in the unpublished Base44 editor to a two-state live planet cover: event title/stage/attendee orbit first, iframe only after `Explore planet`, and `Back to planet` unmounts it. Added 5-second visible-tab polling for real guest/manage data plus an immediate post-RSVP refresh, while leaving the Sites iframe's own lantern polling and immutable World Labs world intact. Editor behavior checks verified 0 → 1 → 0 iframes and correct event-owned URLs; automated tests could not run because the Base44 project has no test runner. Public republish is pending approval. |
 | 2026-08-22 | Base44 / coordination spine | Replaced fixture/sample planet photos in the Base44 editor with the verified `Sunset Picnic Planet` iframe on the landing hero, evolution demo, and pre-submit create preview. Preserved event-owned dynamic worlds and the lightweight fallback. Editor verification covered `/`, `/create`, the corrected guest route, and a fixture route with no console errors or credential exposure. Public republish is pending explicit approval. |
 | 2026-08-22 | Base44 / coordination spine | Published the current Base44 editor to `valiant-sync-orbit-plan.base44.app`, including the Sites-owned World Labs iframe, animated loading state, recap flow and 1–4 date support. Production verification loaded `Sunset Picnic Planet` on the public guest route, removed the loading state after iframe readiness, retained the fallback link, and reported zero console errors. No credential was copied into Base44. |
 | 2026-08-22 | coordination spine | Published Sites version 6 and spent one credit on `plan-it-demo-sunset-picnic-planet-121e48b5`. It completed in 326 seconds with `live: true`; the panorama and caption show a handcrafted circular floating event diorama with table, lanterns and Toronto cues on its surface, and visual inspection confirmed there is no interior-room composition. |
