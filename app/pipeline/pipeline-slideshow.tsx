@@ -108,6 +108,7 @@ export function PipelineSlideshow() {
   const [held, setHeld] = useState(false);
   // Live finger offset in px, so the track follows the thumb before it snaps.
   const [drag, setDrag] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const reducedMotion = useReducedMotion();
   const railRef = useRef<HTMLDivElement>(null);
   const dragging = useRef<{ pointerId: number; startX: number; width: number } | null>(null);
@@ -142,6 +143,7 @@ export function PipelineSlideshow() {
       startX: event.clientX,
       width: event.currentTarget.clientWidth || 1,
     };
+    setIsDragging(true);
     setHeld(true);
   }, []);
 
@@ -159,6 +161,7 @@ export function PipelineSlideshow() {
     const state = dragging.current;
     if (!state || state.pointerId !== event.pointerId) return;
     dragging.current = null;
+    setIsDragging(false);
 
     // A quarter of the stage is enough intent to advance.
     const travelled = event.clientX - state.startX;
@@ -172,7 +175,7 @@ export function PipelineSlideshow() {
   }, []);
 
   const onKeyDown = useCallback(
-    (keyEvent: React.KeyboardEvent<HTMLDivElement>) => {
+    (keyEvent: React.KeyboardEvent<HTMLButtonElement>) => {
       if (keyEvent.key === "ArrowRight") {
         select((index + 1) % SLIDES.length);
       } else if (keyEvent.key === "ArrowLeft") {
@@ -206,7 +209,6 @@ export function PipelineSlideshow() {
         role="tablist"
         aria-label="Pipeline steps"
         ref={railRef}
-        onKeyDown={onKeyDown}
       >
         {SLIDES.map((slide, position) => (
           <button
@@ -225,6 +227,7 @@ export function PipelineSlideshow() {
               .filter(Boolean)
               .join(" ")}
             onClick={() => select(position)}
+            onKeyDown={onKeyDown}
           >
             <b>{slide.key}</b>
             <span>{slide.eyebrow}</span>
@@ -246,7 +249,7 @@ export function PipelineSlideshow() {
             // one stage wide even though its children overflow to six. A -100%
             // translate is therefore exactly one slide.
             transform: `translate3d(calc(${-index * 100}% + ${drag}px), 0, 0)`,
-            transition: dragging.current || reducedMotion
+            transition: isDragging || reducedMotion
               ? "none"
               : "transform 480ms cubic-bezier(.22,.61,.36,1)",
           }}

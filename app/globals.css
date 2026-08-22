@@ -515,6 +515,8 @@ input:focus, textarea:focus, .money-input:focus-within {
 
 .attach-call-row button {
   flex: 0 0 auto;
+}
+
 /* ---------------------------------------------------------------------------
    View demo pipeline (see app/pipeline/pipeline-slideshow.tsx).
    Sits under the create form and is also served standalone at /pipeline so
