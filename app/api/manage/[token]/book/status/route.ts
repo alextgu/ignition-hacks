@@ -1,11 +1,19 @@
 import { env } from "cloudflare:workers";
+import { createD1EventsRepository } from "../../../../../../src/features/events/repository";
+import { createEventService } from "../../../../../../src/features/events/service";
 import type { EnvLike } from "../../../../../../src/integrations/elevenlabs/config";
 import { createBookStatusHandler } from "./handler";
 
-const handle = createBookStatusHandler({
-  getEnv: () => env as unknown as EnvLike,
-});
+const handle = createBookStatusHandler(
+  createEventService(createD1EventsRepository()),
+  {
+    getEnv: () => env as unknown as EnvLike,
+  },
+);
 
-export async function GET(request: Request) {
-  return handle(request);
+type RouteContext = { params: Promise<{ token: string }> };
+
+export async function GET(request: Request, context: RouteContext) {
+  const { token } = await context.params;
+  return handle(request, token);
 }

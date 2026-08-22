@@ -170,22 +170,60 @@ test("live book endpoint dispatches through the booking adapter", async () => {
 });
 
 test("book status endpoint polls the adapter", async () => {
-  const handle = createBookStatusHandler({
-    getEnv: () => readyEnv,
-    createAdapter: () =>
-      fakeAdapter({
-        status: "pending",
-        externalId: "conv_123",
-      }),
-  });
+  const handle = createBookStatusHandler(
+    {
+      getManagedEvent: async (token) =>
+        token === "manage-secret" ? { event } : null,
+    },
+    {
+      getEnv: () => readyEnv,
+      createAdapter: () =>
+        fakeAdapter({
+          status: "pending",
+          externalId: "conv_123",
+        }),
+    },
+  );
   const response = await handle(
     new Request(
       "https://snapplan.test/api/manage/manage-secret/book/status?callId=conv_123",
     ),
+    "manage-secret",
   );
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.call.outcome, "booked");
+});
+
+test("book status endpoint rejects an invalid management token before polling", async () => {
+  let polls = 0;
+  const handle = createBookStatusHandler(
+    {
+      getManagedEvent: async () => null,
+    },
+    {
+      getEnv: () => readyEnv,
+      createAdapter: () => ({
+        async startBookingCall() {
+          return { status: "pending", externalId: "conv_123" };
+        },
+        async getBookingCallStatus() {
+          polls += 1;
+          return { status: "completed", outcome: "booked" };
+        },
+      }),
+    },
+  );
+
+  const response = await handle(
+    new Request(
+      "https://snapplan.test/api/manage/not-valid/book/status?callId=conv_123",
+    ),
+    "not-valid",
+  );
+
+  assert.equal(response.status, 404);
+  assert.equal(polls, 0);
 });
 
 test("verifies ElevenLabs webhook signatures", async () => {

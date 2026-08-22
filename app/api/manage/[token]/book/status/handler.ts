@@ -7,10 +7,22 @@ type StatusHandlerOptions = {
   createAdapter?: (env: EnvLike) => BookingAgentAdapter;
 };
 
-export function createBookStatusHandler(options: StatusHandlerOptions) {
-  return async function handleBookStatus(request: Request) {
+type StatusService = {
+  getManagedEvent(token: string): Promise<unknown | null>;
+};
+
+export function createBookStatusHandler(
+  service: StatusService,
+  options: StatusHandlerOptions,
+) {
+  return async function handleBookStatus(request: Request, token: string) {
     if (request.method !== "GET") {
       return Response.json({ error: "Method not allowed." }, { status: 405 });
+    }
+
+    const managed = await service.getManagedEvent(token);
+    if (!managed) {
+      return Response.json({ error: "Event not found." }, { status: 404 });
     }
 
     const callId = new URL(request.url).searchParams.get("callId")?.trim();

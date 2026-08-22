@@ -463,6 +463,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | coordination spine | Hardened the ElevenLabs booking status route: it now validates the private management token before polling a provider call, with regression coverage. The fixed-number live/mock booking contract is unchanged. |
 | 2026-08-22 | coordination spine | Wired World Labs into the app: one generation per event at creation, 9 new D1 world columns with additive migrations, `GET /api/events/{slug}/world`, and the embeddable `/world/{slug}` canvas (panorama + guest lanterns, planet fallback, no new dependencies). Added the canvas to `/e/{slug}`. 22 new tests; live path verified against a stubbed Marble API. |
 | 2026-08-22 | coordination spine | Live call path: book route dispatches via ElevenLabs adapter, status poll endpoint, manage harness buttons, test-number safety gate. |
 | 2026-08-22 | coordination spine | Published Sites version 4 and production-audited named invitation creation, repeat RSVP update, and host recovery. Wired the existing Base44 preview through direct `planitApi` calls; independently verified named prefill, invalid-token fail-closed behavior, and host recovery. Public Base44 publish remains pending approval. |
