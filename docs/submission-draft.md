@@ -48,39 +48,45 @@ final planit artifact for the group to reflect on!
 
 ## How we built it
 
-A Base44 app with two services behind a boundary — the app hands over a seed
-or a brief and gets back a result, never a vendor endpoint. Every integration
-has a real adapter and a deterministic mock, so the whole product runs with
-**zero API keys set**. 98 tests, every network call mocked.
+A Base44 app with both services behind a boundary — the app hands over a seed
+or a brief and gets back a result, never a vendor endpoint. Each has a real
+adapter and a deterministic mock, so the whole product runs with **zero API
+keys set**. 98 tests, every network call mocked.
 
-**World Labs — the planit itself**
+**World Labs** — `worlds:generate` on `marble-1.1`, prompt built from the
+host's sentence plus their structured answers.
 
-- Host's sentence + their answers → one prompt → `worlds:generate` on `marble-1.1`
-- Takes ~5 minutes, so we generate **once per event, never on RSVP**, behind an animated fallback
-- Operations expire after an hour — an expired one silently keeps the fallback, guests never see a world error
-- Thumbnail is reused as the link preview, so a planit in a group chat looks intentional
-- Their iframe-embed rules aren't documented, so we render the iframe *and* always offer a new-tab link
+- Their iframe-embed rules aren't documented, so we render the iframe *and*
+  always ship a new-tab link — the guaranteed path has to exist
+- The returned thumbnail doubles as the link-preview image, so a planit
+  dropped in a group chat previews itself
 
-**ElevenLabs — the agent that calls**
+**ElevenLabs** — one agent, over Twilio via their native integration.
 
-- One agent, configured once; each call's context injected at dial time via dynamic variables + prompt override
-- The host's negotiation range becomes **hard limits**: a price ceiling it can't exceed, no card details, no non-refundable deposits, no times the group didn't agree to
-- Told to say plainly it's an AI if asked. Recording off by default — taping a restaurant can need consent
-- `processing` isn't `done`, so we show "wrapping up" instead of an empty result
-- **Never reports booked without positive evidence** — anything ambiguous becomes "needs your attention". Telling a group they have a table when they don't was the one failure we refused to allow
-- Twilio carries the call via ElevenLabs' native integration
+- Context is injected at dial time through dynamic variables and a per-call
+  prompt override, instead of creating an agent per booking
+- The host's negotiation range compiles into **hard limits** in the system
+  prompt: a price ceiling it can't exceed, no card details, no
+  non-refundable deposits, no times the group didn't agree to
+- `processing` isn't `done` — the call has hung up but analysis is still
+  running, so treating it as finished shows an empty transcript
+- **A call is never reported as booked without positive evidence.** Anything
+  ambiguous returns "needs your attention", and no code path renders that as
+  success
 
-**Base44 — the app and the live loop**
+**Base44** — entities, pages, Deno backend functions.
 
-- Entities, pages, Deno functions. `secrets.get()` inside the handler, `asServiceRole` for writes
-- Call progress is appended to a `CallEvent` entity that every screen subscribes to — the whole group watches the negotiation arrive line by line, on their own phones, at once
-- We deliberately didn't use `waitUntil()` to place calls: Base44 documents it as best-effort with no completion guarantee, and a phone call shouldn't *probably* happen. It goes inline and we poll
+- Call progress appends to a `CallEvent` entity every screen subscribes to,
+  so the whole group watches the negotiation arrive line by line, on their
+  own phones, simultaneously
+- We deliberately don't place calls in `waitUntil()` — Base44 documents it as
+  best-effort with no completion guarantee, and a phone call shouldn't
+  *probably* happen. It runs inline and we poll
 - *[CONFIRM: your real entity and function names]*
 
-**The mocks**
-
-- Simulated call unfolds over 12 seconds, transcript line by line, built from the real brief — venue, host, party size and dietary notes all appear in the dialogue
-- Stateless, so it survives a redeploy. We can rehearse on a plane, and a dead API can't take the demo down
+**The mocks** — the simulated call unfolds over 12 seconds, transcript line by
+line, built from the real brief. State is encoded in the id rather than held
+in memory, so it survives a redeploy and a dead API can't take the demo down.
 
 ## Challenges we ran into
 
