@@ -1,9 +1,17 @@
 /**
- * Minimal fetch wrapper: adds a timeout (via AbortController) and normalizes
- * every failure mode (network error, timeout, non-2xx, malformed JSON) into
- * a single `HttpCallFailure` shape instead of throwing a grab-bag of error
- * types. Uses only the native `fetch`/`AbortController` — no HTTP client
- * dependency is introduced.
+ * Shared JSON-over-HTTP helper used by every external integration in this
+ * repository (World Labs, ElevenLabs).
+ *
+ * Purpose: give every adapter ONE way to make a network call that
+ *   (a) always has a timeout, and
+ *   (b) never throws — every failure mode (network error, timeout, non-2xx,
+ *       malformed JSON) is normalized into a single `HttpCallFailure` shape.
+ *
+ * That second property is what lets the adapters guarantee "external service
+ * problems become a controlled failed result, not an exception" without each
+ * one re-implementing try/catch plumbing.
+ *
+ * Uses only native `fetch` / `AbortController` — no HTTP client dependency.
  */
 
 export type HttpCallSuccess<T> = {
@@ -21,11 +29,18 @@ export type HttpCallFailure = {
 
 export type HttpCallResult<T> = HttpCallSuccess<T> | HttpCallFailure;
 
+export type FetchJsonOptions = {
+  /** Prefix used in error messages, e.g. "World Labs" or "ElevenLabs". */
+  serviceLabel: string;
+  timeoutMs: number;
+};
+
 export async function fetchJson<T>(
   url: string,
   init: RequestInit,
-  timeoutMs: number
+  options: FetchJsonOptions
 ): Promise<HttpCallResult<T>> {
+  const { serviceLabel, timeoutMs } = options;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -38,7 +53,7 @@ export async function fetchJson<T>(
         ok: false,
         status: response.status,
         reason: "http_error",
-        message: `World Labs API returned ${response.status}: ${truncate(text, 500)}`,
+        message: `${serviceLabel} API returned ${response.status}: ${truncate(text, 500)}`,
       };
     }
 
@@ -47,14 +62,13 @@ export async function fetchJson<T>(
     }
 
     try {
-      const data = JSON.parse(text) as T;
-      return { ok: true, status: response.status, data };
+      return { ok: true, status: response.status, data: JSON.parse(text) as T };
     } catch {
       return {
         ok: false,
         status: response.status,
         reason: "invalid_json",
-        message: "World Labs API returned a response that could not be parsed as JSON.",
+        message: `${serviceLabel} API returned a response that could not be parsed as JSON.`,
       };
     }
   } catch (err) {
@@ -62,13 +76,16 @@ export async function fetchJson<T>(
       return {
         ok: false,
         reason: "timeout",
-        message: `World Labs API call timed out after ${timeoutMs}ms.`,
+        message: `${serviceLabel} API call timed out after ${timeoutMs}ms.`,
       };
     }
     return {
       ok: false,
       reason: "network",
-      message: err instanceof Error ? err.message : "Unknown network error calling World Labs API.",
+      message:
+        err instanceof Error
+          ? err.message
+          : `Unknown network error calling the ${serviceLabel} API.`,
     };
   } finally {
     clearTimeout(timer);

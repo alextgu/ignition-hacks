@@ -182,9 +182,11 @@ src/integrations/worldlabs/
   config.ts               Environment variable loading (no secrets logged)
   promptMapper.ts          WorldSeed -> World Labs text prompt / display name
   internalApiTypes.ts     World Labs API request/response shapes (NOT exported publicly)
-  httpClient.ts            fetch wrapper: timeout + normalized failure handling
   worldLabsAdapter.ts      Real adapter (World API calls)
   mockAdapter.ts           Deterministic offline adapter
   index.ts                 Public entry point / adapter factory
   __tests__/               Unit tests (mocked fetch only, no live calls)
+
+Shared with other integrations:
+  src/integrations/shared/httpJson.ts   fetch wrapper: timeout + normalized failure handling
 ```

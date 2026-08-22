@@ -1,7 +1,7 @@
 import type { WorldLabsConfig } from "./config.ts";
 import { buildWorldDisplayName, buildWorldPrompt } from "./promptMapper.ts";
 import type { WorldSeed, WorldResult, WorldLabsAdapter } from "./types.ts";
-import { fetchJson } from "./httpClient.ts";
+import { fetchJson } from "../shared/httpJson.ts";
 import type { GenerateWorldRequest, WorldLabsOperation, WorldLabsWorld } from "./internalApiTypes.ts";
 
 /**
@@ -56,7 +56,7 @@ export class RealWorldLabsAdapter implements WorldLabsAdapter {
         },
         body: JSON.stringify(body),
       },
-      this.config.timeoutMs
+      { serviceLabel: "World Labs", timeoutMs: this.config.timeoutMs }
     );
 
     if (!result.ok) {
@@ -80,7 +80,7 @@ export class RealWorldLabsAdapter implements WorldLabsAdapter {
         method: "GET",
         headers: { "WLT-Api-Key": this.config.apiKey },
       },
-      this.config.timeoutMs
+      { serviceLabel: "World Labs", timeoutMs: this.config.timeoutMs }
     );
 
     if (!result.ok) {
