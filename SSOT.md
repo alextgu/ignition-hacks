@@ -5,9 +5,9 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** — restored the original public Base44 URL and
-  republished the large-planet layout fix; the generated World Labs scene is
-  visible and opens in production
+- Last updated: **2026-08-22** — published real World Labs thumbnails on the
+  closed planet cards; click-to-enter still opens one interactive world and
+  the procedural planet remains the loading/error fallback
 
 ---
 
@@ -505,6 +505,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | Base44 / coordination spine | Replaced the large closed-card procedural planets with the real generated World Labs thumbnail while preserving title/stage/orbit overlays and click-to-enter behavior. `PlanetWorldFrame` now accepts `coverImageUrl` and falls back to `Planetoid` when absent or on image error; `planitApi.normalizeWorldState` exposes the existing `world.thumbnailUrl` without another request. Landing, DemoStepper and pre-submit Create use the verified demo thumbnail; live guest routes reuse their already-polled event thumbnail. Production verification found 2 loaded World Labs images and 0 iframes before interaction, exactly 1 iframe after `Explore planet`, 0 again after Back, natural image size 720×480, and zero console logs/errors. Small pipeline planets, API cadence, event data, World Labs generation, credentials and booking were unchanged. |
 | 2026-08-22 | Base44 / coordination spine | Restored the public Base44 slug from `plan-it-ignition-hacks` to the originally shared `valiant-sync-orbit-plan` and republished the corrected build. Before the change the original URL returned HTTP 404; afterward it returned 200. Production browser verification measured 340px/300px large planet covers, mounted exactly one iframe after `Explore planet`, visibly rendered the generated World Labs scene, and reported zero console logs/errors. The temporary renamed URL now returns 404; Sites CORS keeps both origins allowlisted harmlessly. |
 | 2026-08-22 | Base44 / coordination spine | Fixed the missing production World Labs display at its layout source: widthless Framer Motion wrappers caused both large `PlanetWorldFrame` instances to collapse to 0px even though the SVG and world URL were healthy. Added `w-full min-w-0` only to the large wrappers in `src/pages/Landing.jsx` and `src/components/DemoStepper.jsx`, then republished. Production verification measured 340px/300px planet covers, 0 iframes before interaction, exactly 1 after `Explore planet`, and a visibly rendered generated World Labs scene. Small pipeline planets, APIs, polling, event data, prompts, and credentials were unchanged. |
 | 2026-08-22 | Base44 / coordination spine | Republished the live-count planet-cover fix. Base44 renamed the public app to `plan-it-ignition-hacks.base44.app`; added that origin to the existing Sites CORS allowlist, redeployed validated Sites version 6 with environment revision 5, and verified the production guest route loads `2 in orbit` / `Gathering`. The previous public and preview origins remain allowed for compatibility. |
