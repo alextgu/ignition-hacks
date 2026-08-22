@@ -5,8 +5,9 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** — Base44 editor preview now uses clickable,
-  live-updating planet covers; public republish awaits approval
+- Last updated: **2026-08-22** — Base44 is republished at its renamed public
+  URL with clickable, live-updating planet covers; Sites CORS follows both the
+  old and renamed origins
 
 ---
 
@@ -23,7 +24,7 @@ work — see `AGENTS.md` Rule 0.**
    Base44 (`docs/base44/port/integration-bundle.md`).
 3. **Base44 finished UI (published)** — owns the polished host/guest/manage
    experience and calls the Sites API through the shared `planitApi` adapter:
-   `https://valiant-sync-orbit-plan.base44.app`. Temporary Sites pages are
+   `https://plan-it-ignition-hacks.base44.app`. Temporary Sites pages are
    harnesses only.
 
 Do not regenerate World Labs or ElevenLabs client code. Extend the existing
@@ -44,7 +45,7 @@ contracts.
 | World Labs integration | integrations agent | **Deployed + live verified** — miniature event-planetoid composition; text/image/multi-image and render assets retained | 2026-08-22 |
 | World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Deployed + live verified** — corrected planet panorama completed in 326s; Base44 public iframe verified | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
-| Finished Base44 UI | Base44 / Simon | **Editor verified; republish pending** — live API adapter, clickable live planet covers, dynamic event worlds, loading state and recap flow | 2026-08-22 |
+| Finished Base44 UI | Base44 / Simon | **Published + production verified** — live API adapter, clickable live planet covers, dynamic event worlds, loading state and recap flow | 2026-08-22 |
 | View demo pipeline slideshow (`/pipeline`, mounted under create) | integrations agent | **Done** — dependency-free, embeddable | 2026-08-22 |
 | In-app world viewer (SparkJS, base + walk cameras) | unassigned | **Not started** — dependency-free panorama canvas ships instead; splat URLs already served | 2026-08-22 |
 | Connected Twilio caller number in ElevenLabs | human + ElevenLabs | **Blocked** until number import | 2026-08-22 |
@@ -55,7 +56,7 @@ contracts.
 - Create an event, share guest/manage links, collect RSVPs, view consensus on
   the published Plan-it UI or deployed Sites harness.
 - Use distinct guest and host/admin routes at
-  `https://valiant-sync-orbit-plan.base44.app`; new events persist to D1.
+  `https://plan-it-ignition-hacks.base44.app`; new events persist to D1.
 - Reopen an RSVP on the same browser to update the same attendee rather than
   create a duplicate.
 - Create recoverable named friend links through the private management API;
@@ -80,7 +81,7 @@ contracts.
   ready, and retains an `Open world` fallback link. A production check of the
   `Sunset Picnic Planet` route rendered the live World Labs canvas with zero
   browser console errors; Base44 has no World Labs credential.
-- The next Base44 editor version starts the landing hero, evolution demo,
+- The published Base44 version starts the landing hero, evolution demo,
   pre-submit `/create`, guest and manage world panels on a titled illustrated
   planet cover. `Explore planet` mounts exactly one event-owned World Labs
   iframe in place; `Back to planet` unmounts it. Real guest/manage covers poll
@@ -90,8 +91,9 @@ contracts.
   no World Labs regeneration occurs. Editor checks passed on landing, create,
   corrected guest and manage-fixture routes with no console errors or
   credential exposure. Base44 has no automated test runner, so these were
-  browser behavior checks. This editor version is **not public until Publish
-  App is confirmed**.
+  browser behavior checks. Production verification after republish showed
+  `2 in orbit`, `Gathering`, and a collapsed world iframe until the user clicks
+  `Explore planet`.
 - Open `/world/{slug}` — the embeddable canvas. It shows the generated
   panorama once Marble finishes, the deterministic planet until then, and
   one light per RSVP in every state.
@@ -503,8 +505,9 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
-| 2026-08-22 | Base44 / coordination spine | Changed World Labs presentation in the unpublished Base44 editor to a two-state live planet cover: event title/stage/attendee orbit first, iframe only after `Explore planet`, and `Back to planet` unmounts it. Added 5-second visible-tab polling for real guest/manage data plus an immediate post-RSVP refresh, while leaving the Sites iframe's own lantern polling and immutable World Labs world intact. Editor behavior checks verified 0 → 1 → 0 iframes and correct event-owned URLs; automated tests could not run because the Base44 project has no test runner. Public republish is pending approval. |
-| 2026-08-22 | Base44 / coordination spine | Replaced fixture/sample planet photos in the Base44 editor with the verified `Sunset Picnic Planet` iframe on the landing hero, evolution demo, and pre-submit create preview. Preserved event-owned dynamic worlds and the lightweight fallback. Editor verification covered `/`, `/create`, the corrected guest route, and a fixture route with no console errors or credential exposure. Public republish is pending explicit approval. |
+| 2026-08-22 | Base44 / coordination spine | Republished the live-count planet-cover fix. Base44 renamed the public app to `plan-it-ignition-hacks.base44.app`; added that origin to the existing Sites CORS allowlist, redeployed validated Sites version 6 with environment revision 5, and verified the production guest route loads `2 in orbit` / `Gathering`. The previous public and preview origins remain allowed for compatibility. |
+| 2026-08-22 | Base44 / coordination spine | Changed World Labs presentation in the Base44 editor to a two-state live planet cover: event title/stage/attendee orbit first, iframe only after `Explore planet`, and `Back to planet` unmounts it. Added 5-second visible-tab polling for real guest/manage data plus an immediate post-RSVP refresh, while leaving the Sites iframe's own lantern polling and immutable World Labs world intact. Editor behavior checks verified 0 → 1 → 0 iframes and correct event-owned URLs; automated tests could not run because the Base44 project has no test runner. The later publish entry records production rollout. |
+| 2026-08-22 | Base44 / coordination spine | Replaced fixture/sample planet photos in the Base44 editor with the verified `Sunset Picnic Planet` iframe on the landing hero, evolution demo, and pre-submit create preview. Preserved event-owned dynamic worlds and the lightweight fallback. Editor verification covered `/`, `/create`, the corrected guest route, and a fixture route with no console errors or credential exposure. The later publish entry records production rollout. |
 | 2026-08-22 | Base44 / coordination spine | Published the current Base44 editor to `valiant-sync-orbit-plan.base44.app`, including the Sites-owned World Labs iframe, animated loading state, recap flow and 1–4 date support. Production verification loaded `Sunset Picnic Planet` on the public guest route, removed the loading state after iframe readiness, retained the fallback link, and reported zero console errors. No credential was copied into Base44. |
 | 2026-08-22 | coordination spine | Published Sites version 6 and spent one credit on `plan-it-demo-sunset-picnic-planet-121e48b5`. It completed in 326 seconds with `live: true`; the panorama and caption show a handcrafted circular floating event diorama with table, lanterns and Toronto cues on its surface, and visual inspection confirmed there is no interior-room composition. |
 | 2026-08-22 | integrations | Replaced World Labs' explicit photographic-interior prompt with the approved Plan-it composition: complete miniature floating event planet, elevated three-quarter camera, event landmarks on the upper hemisphere, tactile clay/painted-wood style, and explicit first-person/interior exclusions. Added five prompt regressions and updated the existing mapping expectations; subsequently live-verified in Sites version 6. |
