@@ -32,23 +32,19 @@ project.
 
 ## What it does
 
-In a traditional group chat, people don't respond, cancel last minute, and
-make you feel like the only person who wants the plan to succeed. Plan-it
-makes planning events incredibly simple and fun.
+Instead of a traditional group chat where people don't respond, cancel last
+minute, and make you feel like the only person who wants the plan to succeed,
+Plan-it makes planning events incredibly simple and fun.
 
-1. **Make the plan.** Go to the admin page and fill in the details. An
-   interactive planit forms, making the plan.
-2. **Send one link.** Send the invite link to all your friends. They get all
-   the details in one place, while your planit updates live.
-3. **Launch.** Once your planit is ready, the admin can continue to launch.
-   An orchestration of agents books the event, then sends the schedules,
-   itinerary and costs for each individual.
-4. **Fall back if it stalls.** For plans that don't get past the planning
-   stage, planit has fallback loops to modify events to cater to the user's
-   needs.
-5. **Keep it.** Once the event is in action, each user can add photos and
-   details to the planit — a final planit artifact for the group to reflect
-   on!
+Simply go to the admin page and fill in the details — an interactive planit
+forms, making the plan. Send the invite link to your friends and they get all
+the details in one place, while your planit updates live. Once your planit is
+ready, the admin can continue to launch, where an orchestration of agents
+books the event and sends the schedule, itinerary and costs to each
+individual. For plans that don't get past the planning stage, planit has
+fallback loops to modify the event and cater to the user's needs. Once the
+event is in action, each user can add photos and details to the planit — a
+final planit artifact for the group to reflect on!
 
 ## How we built it
 
