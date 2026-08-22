@@ -106,8 +106,11 @@ export function PipelineSlideshow() {
   const [index, setIndex] = useState(0);
   // Once someone picks a step, stop moving it under them.
   const [held, setHeld] = useState(false);
+  // Live finger offset in px, so the track follows the thumb before it snaps.
+  const [drag, setDrag] = useState(0);
   const reducedMotion = useReducedMotion();
   const railRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef<{ pointerId: number; startX: number; width: number } | null>(null);
 
   useEffect(() => {
     if (held || reducedMotion) return;
@@ -129,6 +132,44 @@ export function PipelineSlideshow() {
     const tab = rail?.children[index] as HTMLElement | undefined;
     tab?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [index]);
+
+  // Swipe. A slideshow you cannot drag on a phone is a stack with buttons.
+  const onPointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    // Let the tab rail and any future controls keep their own clicks.
+    if ((event.target as HTMLElement).closest("button")) return;
+    dragging.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      width: event.currentTarget.clientWidth || 1,
+    };
+    setHeld(true);
+  }, []);
+
+  const onPointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const state = dragging.current;
+    if (!state || state.pointerId !== event.pointerId) return;
+    const delta = event.clientX - state.startX;
+    // Resist at the two ends so the track feels bounded rather than broken.
+    const atStart = index === 0 && delta > 0;
+    const atEnd = index === SLIDES.length - 1 && delta < 0;
+    setDrag(atStart || atEnd ? delta * 0.28 : delta);
+  }, [index]);
+
+  const onPointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const state = dragging.current;
+    if (!state || state.pointerId !== event.pointerId) return;
+    dragging.current = null;
+
+    // A quarter of the stage is enough intent to advance.
+    const travelled = event.clientX - state.startX;
+    const threshold = state.width * 0.25;
+    setDrag(0);
+    if (travelled <= -threshold) {
+      setIndex((current) => Math.min(current + 1, SLIDES.length - 1));
+    } else if (travelled >= threshold) {
+      setIndex((current) => Math.max(current - 1, 0));
+    }
+  }, []);
 
   const onKeyDown = useCallback(
     (keyEvent: React.KeyboardEvent<HTMLDivElement>) => {
@@ -191,25 +232,47 @@ export function PipelineSlideshow() {
         ))}
       </div>
 
-      <div className="pipeline-stage">
-        <article
-          className="pipeline-slide is-active"
-          data-kind={active.kind}
-          role="tabpanel"
-          id={`pipeline-panel-${active.key}`}
-          aria-labelledby={`pipeline-tab-${active.key}`}
-          key={active.key}
+      <div
+        className="pipeline-stage"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        <div
+          className="pipeline-track"
+          style={{
+            // The track is a block-level flex container, so its own width stays
+            // one stage wide even though its children overflow to six. A -100%
+            // translate is therefore exactly one slide.
+            transform: `translate3d(calc(${-index * 100}% + ${drag}px), 0, 0)`,
+            transition: dragging.current || reducedMotion
+              ? "none"
+              : "transform 480ms cubic-bezier(.22,.61,.36,1)",
+          }}
         >
-          <div className="pipeline-copy">
-            <p className="pipeline-step">
-              Step {active.key} &mdash; {active.eyebrow}
-            </p>
-            <h3>{active.title}</h3>
-            <p>{active.body}</p>
-            <p className="pipeline-meta">{active.meta}</p>
-          </div>
-          <PipelineScene kind={active.kind} />
-        </article>
+          {SLIDES.map((slide, position) => (
+            <article
+              className="pipeline-slide"
+              data-kind={slide.kind}
+              role="tabpanel"
+              id={`pipeline-panel-${slide.key}`}
+              aria-labelledby={`pipeline-tab-${slide.key}`}
+              aria-hidden={position !== index}
+              key={slide.key}
+            >
+              <div className="pipeline-copy">
+                <p className="pipeline-step">
+                  Step {slide.key} &mdash; {slide.eyebrow}
+                </p>
+                <h3>{slide.title}</h3>
+                <p>{slide.body}</p>
+                <p className="pipeline-meta">{slide.meta}</p>
+              </div>
+              <PipelineScene kind={slide.kind} />
+            </article>
+          ))}
+        </div>
       </div>
 
       <div className="pipeline-foot">

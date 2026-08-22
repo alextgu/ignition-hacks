@@ -562,19 +562,36 @@ input:focus, textarea:focus, .money-input:focus-within {
   box-shadow: 0 30px 80px rgba(50, 45, 72, 0.1);
 }
 
+/* A real track: every slide is laid out side by side and the strip moves,
+   so the thing reads as a slideshow and can be dragged on a phone. */
+.pipeline-track {
+  display: flex;
+  will-change: transform;
+  touch-action: pan-y;
+}
+
 .pipeline-slide {
+  flex: 0 0 100%;
+  min-width: 0;
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(300px, 1.05fr);
   gap: clamp(1.6rem, 4vw, 3.4rem);
   align-items: center;
   padding: clamp(1.6rem, 3.4vw, 2.8rem);
-  animation: pipeline-in 420ms ease;
 }
 
-@keyframes pipeline-in {
-  from { opacity: 0; transform: translateY(7px); }
-  to { opacity: 1; transform: none; }
+/* Off-screen slides fade back so the active one clearly owns the frame. */
+.pipeline-slide[aria-hidden="true"] {
+  opacity: 0.28;
+  transition: opacity 480ms ease;
 }
+
+.pipeline-slide[aria-hidden="false"] {
+  transition: opacity 480ms ease;
+}
+
+.pipeline-stage { cursor: grab; }
+.pipeline-stage:active { cursor: grabbing; }
 
 .pipeline-step {
   margin: 0 0 0.8rem;
@@ -820,7 +837,9 @@ input:focus, textarea:focus, .money-input:focus-within {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pipeline-slide { animation: none; }
+  .pipeline-slide,
+  .pipeline-slide[aria-hidden="true"],
+  .pipeline-slide[aria-hidden="false"] { transition: none; }
   .pp-quote i { animation: none; }
   .pipeline-progress i { transition: none; }
 }
