@@ -1,4 +1,4 @@
-# SnapPlan — Devpost submission draft
+# Plan-it — Devpost submission draft
 
 **Status: draft.** Anything in `[CONFIRM]` depends on what actually ships —
 don't submit those claims until you've seen them work. Nothing here describes
@@ -8,38 +8,62 @@ a feature that doesn't exist.
 
 ## Project name
 
-**SnapPlan** — *[CONFIRM: project.md flags this as a working title that may
-be renamed. Decide before submitting.]*
+**Plan-it**
 
-Tagline: **From "we should get dinner sometime" to a confirmed reservation,
-without the group chat.**
+Say it out loud and it's two things at once: *plan it* — the imperative — and
+*planet*, which is what every event actually becomes here. World Labs
+generates a little world for each plan, guests appear inside it, and it ends up
+as the group's keepsake. The pun is the product, and the logo is a planet.
 
----
+Tagline: **Start with the vague version. Plan-it does the rest.**
+
+*[CONFIRM the domain. `planit.com`, `planitgroup.com` and several App Store
+apps already exist, and `planit-co.com` is an event-management company — so
+grab a TLD that does the work instead. `plan-it.party` or `planit.party` reads
+as one word, fits hangouts and parties, and keeps the planet logo intact.]*
 
 ## Inspiration
 
-Every group plan dies the same way. Someone says "we should get dinner." Six
-people say "I'm free most nights." Forty messages later nobody has picked a
-date, one person has quietly decided it's too expensive to say out loud, and
-the whole thing evaporates.
+This started as a throwaway line from my CEO.
 
-The work isn't hard, it's just nobody's job. Someone has to collect everyone's
-availability, guess a budget nobody will admit to, and then actually call the
-restaurant. That last part is why plans stall at the finish line — the group
-agrees, and then no one wants to make the phone call.
+I was interning at an events AI startup, and he mentioned offhand how cool it
+would be to have really quick event setup and invites. It stuck with me,
+because I'd been hitting the same wall in my own life — planning a hangout, a
+birthday party, a corporate mixer. Three completely different events, all
+falling apart in exactly the same place.
 
-We wanted the part after "yes, Friday works" to happen on its own. And we
-wanted the plan to feel like something, not like a scheduling poll — so the
-event shows up as a place you can look at, not a grid of checkboxes.
+**The problem isn't planning. It's that every tool assumes you already know
+the answer.**
 
----
+Eventbrite, Partiful, a calendar invite — they all start the same way: enter
+the date, enter the venue, send it out, collect yes or no. That works when the
+details are already settled.
+
+But that's not how real plans start. Real plans start with *"we should do
+something next week"* — and the date, the place, and the budget are the things
+you're trying to *figure out*. They're the output, not the input. So people
+fall back to the group chat, which has the opposite problem: infinitely
+flexible, and it never converges. Forty messages later there's no decision,
+one person has quietly decided it's too expensive to say out loud, and the
+plan dies.
+
+And even when a group does agree, it stalls one step from the finish line,
+because somebody still has to pick up the phone and call the venue. Nobody
+volunteers for that.
+
+So the gap I kept running into was a specific one: **small, quick events where
+nobody knows the details yet, and someone still has to make the booking
+happen.** Too informal for event software, too consequential for a group chat.
+
+Plan-it is my attempt at that middle. You start with the vague version, the
+group converges on the link, and the booking makes itself.
 
 ## What it does
 
 A host types one vague sentence: *"a cozy birthday dinner in Toronto."*
 
 1. **It builds a proposal.** From that sentence plus a few taps — rough area,
-   group size, two or three possible nights, a price range — SnapPlan creates
+   group size, two or three possible nights, a price range — Plan-it creates
    an event with two links: a public one to drop in the group chat, and a
    private host link.
 2. **Guests answer in fifteen seconds.** Name, tap the times that work, and
@@ -191,7 +215,7 @@ a mock is worse than a crash. Fail loudly, or don't fail.
 
 ---
 
-## What's next for SnapPlan
+## What's next for Plan-it
 
 - **Venue discovery.** Right now the host names the restaurant. Next: suggest
   places that fit the group's area, budget, and party size, then call the best

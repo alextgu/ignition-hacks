@@ -1,4 +1,4 @@
-# SSOT.md — SnapPlan single source of truth
+# SSOT.md — Plan-it single source of truth
 
 **Live build state. Every agent updates this file in the same commit as its
 work — see `AGENTS.md` Rule 0.**

@@ -1,6 +1,6 @@
-# SnapPlan design system — "warm paper, dark line"
+# Plan-it design system — "warm paper, dark line"
 
-The single source of truth for how SnapPlan looks. Every Base44 prompt in
+The single source of truth for how Plan-it looks. Every Base44 prompt in
 this folder references this file. Chosen 2026-08-22.
 
 ## The idea in one line
@@ -149,7 +149,7 @@ in mono to the right. The winning window sits in a raised card with an
 - Timeline, newest at the bottom, auto-scrolling. Left gutter holds `+00:07`
   in `--d-text-secondary` mono, fixed width so the column stays aligned.
 - Agent lines: `--d-text`, left-aligned, prefixed with a small `--d-accent`
-  triangle and a `SNAPPLAN AGENT` label on the first one only.
+  triangle and a `PLAN-IT AGENT` label on the first one only.
 - Venue lines: `--d-text-secondary`, indented 24px, labelled with the venue
   name on the first one only.
 - Counter-offers: their own block, `--d-surface` fill, `1.5px --d-warning`

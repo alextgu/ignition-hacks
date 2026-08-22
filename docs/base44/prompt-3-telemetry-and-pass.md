@@ -69,7 +69,7 @@ Make it feel like a flight tracker, not a chat log.
 - Monospace timestamps in the left gutter (`+00:07`).
 - Each `kind` gets its own visual treatment: `dialing` pulses; `agent_line`
   and `venue_line` are distinguishable at a glance (different alignment and
-  colour, with a small "SnapPlan agent" / venue label); `counter_offer` is a
+  colour, with a small "Plan-it agent" / venue label); `counter_offer` is a
   bordered amber callout; `confirmed` is a solid success banner.
 - A live status pill at the top: "Dialing…", "On the call · 0:14", "Wrapping
   up…", "Secured".
@@ -204,7 +204,7 @@ desktop.
 - Timeline newest-at-bottom, auto-scrolling. Fixed-width left gutter holds
   `+00:07` in `--d-text-secondary` mono so the column stays aligned.
 - Agent lines: `--d-text`, left aligned, small `--d-accent` triangle prefix,
-  a `SNAPPLAN AGENT` label on the first one only.
+  a `PLAN-IT AGENT` label on the first one only.
 - Venue lines: `--d-text-secondary`, indented 24px, venue name as the label
   on the first one only.
 - Counter-offers: own block, `--d-surface` fill, `1.5px --d-warning` left

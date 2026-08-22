@@ -38,7 +38,7 @@ export type NegotiationBounds = {
  * an event "Ready to plan". Mirrors the brief contents listed in project.md.
  */
 export type EventBrief = {
-  /** SnapPlan event id, used for correlation/logging only. */
+  /** Plan-it event id, used for correlation/logging only. */
   eventId: string;
   /** Human name of the venue being called. */
   venueName: string;

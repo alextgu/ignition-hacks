@@ -1,10 +1,12 @@
-# SnapPlan
+# Plan-it
 
-> **Working title:** SnapPlan is temporary and may be renamed before submission.
+> **Name:** Plan-it (*plan it* / *planet*) — chosen 2026-08-22, replacing the
+> SnapPlan working title. Logo is a planet. Domain still to be confirmed; the
+> bare `planit` names are widely taken, so a `.party`-style TLD is preferred.
 
 ## Project summary
 
-SnapPlan is an autonomous event coordination experience for small social plans and lightweight professional gatherings. A host can begin with an incomplete idea such as “a cozy birthday dinner in Toronto” or “a weekend meetup in Montreal.” SnapPlan turns that idea into a visual event proposal, collects availability and price comfort through one shareable link, and prepares the confirmed group for autonomous booking.
+Plan-it is an autonomous event coordination experience for small social plans and lightweight professional gatherings. A host can begin with an incomplete idea such as “a cozy birthday dinner in Toronto” or “a weekend meetup in Montreal.” Plan-it turns that idea into a visual event proposal, collects availability and price comfort through one shareable link, and prepares the confirmed group for autonomous booking.
 
 The product deliberately does not plan every detail of a large event or trip. It establishes consensus, creates a memorable spatial-art experience, and gives an agent enough information to handle the next practical action.
 
@@ -15,7 +17,7 @@ Planning should move from a vague idea to a bookable group decision without long
 The primary flow is:
 
 1. The host describes an event idea.
-2. SnapPlan creates a lightweight proposal with possible times and estimated pricing.
+2. Plan-it creates a lightweight proposal with possible times and estimated pricing.
 3. Guests respond through a shared mobile-friendly link.
 4. The visual world grows as the event becomes more concrete and people join.
 5. Once the group reaches consensus, the host can ask an autonomous agent to book online or call the venue.
@@ -33,7 +35,7 @@ The first release is a polished, reliable vertical slice. Demo reliability matte
 
 ### 1. Create
 
-The host starts with a loose natural-language description. SnapPlan asks only for the information needed to coordinate the group:
+The host starts with a loose natural-language description. Plan-it asks only for the information needed to coordinate the group:
 
 - General area or city
 - Approximate group size
@@ -42,7 +44,7 @@ The host starts with a loose natural-language description. SnapPlan asks only fo
 
 The opening description is also the creative seed for the World Labs experience. Structured answers enrich that seed with event type, mood, setting, season, time of day, group size, and price character.
 
-The host previews the proposal and creates the event. SnapPlan returns two different links:
+The host previews the proposal and creates the event. Plan-it returns two different links:
 
 - A public, unlisted guest link suitable for sharing in a group chat
 - A private host-management link protected by an unguessable token

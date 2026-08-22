@@ -5,7 +5,7 @@ can create an event and RSVP before moving to prompt 2.
 
 ---
 
-Build a mobile-first group event coordination app called **SnapPlan**. A host
+Build a mobile-first group event coordination app called **Plan-it**. A host
 starts with a vague idea like "a cozy birthday dinner in Toronto", shares one
 link, and the app collects availability and price comfort from guests until
 the group reaches consensus.
@@ -49,7 +49,7 @@ same browser must update that attendee, never create a second row.
 ## Guest identity
 
 On first visit to a guest page, generate a random `guest_token` and persist it
-in `localStorage` under `snapplan_guest_token`. Reuse it on every later visit.
+in `localStorage` under `planit_guest_token`. Reuse it on every later visit.
 No accounts, no login. Reopening the link restores and lets them edit their
 own response. The host is identified only by holding the `manage_token`.
 

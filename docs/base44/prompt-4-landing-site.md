@@ -5,7 +5,7 @@ around without touching live event data.
 
 ---
 
-Build a single-page marketing and demo site for **SnapPlan**, a group event
+Build a single-page marketing and demo site for **Plan-it**, a group event
 coordination app that turns a vague idea into a booked reservation.
 
 The product story, in order:
