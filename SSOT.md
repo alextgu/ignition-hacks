@@ -71,6 +71,12 @@ Owns `src/integrations/worldlabs/`, world-prompt mapping, asynchronous world
 generation, polling, fallbacks, and the browser rendering handoff. World
 generation starts once after event creation and must never block RSVPs.
 
+The approved visual direction is **Lantern Diorama**: Marble 1.1 generates one
+cut-paper-and-clay world, while SnapPlan adds participant lanterns, warmer
+ambience, a ready-state constellation, and a future booked-state ticket seal.
+The embeddable route is `/world/{event-slug}`. Base44 owns only the surrounding
+layout and iframe dimensions.
+
 ### Coordination and Booking Backend
 
 Owns shared API compatibility, event lock-in, the frozen booking brief,
@@ -205,3 +211,5 @@ Secrets live only in local `.env` and hosted runtime configuration.
 - Confirmed that no caller number is connected.
 - Saved the user-provided test destination locally without recording it here.
 - Corrected the local World Labs key status and recorded its env-name mismatch.
+- Approved the Marble 1.1 plus SparkJS embeddable-canvas architecture and the
+  Lantern Diorama visual system.
