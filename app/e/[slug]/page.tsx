@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createD1EventsRepository } from "../../../src/features/events/repository";
 import { createEventService } from "../../../src/features/events/service";
@@ -35,7 +36,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
   return (
     <main className="temporary-page">
-      <a className="brand" href="/">SnapPlan</a>
+      <Link className="brand" href="/">SnapPlan</Link>
       <p className="eyebrow">Shared event</p>
       <h1>{event.title}</h1>
       <p>{event.description}</p>

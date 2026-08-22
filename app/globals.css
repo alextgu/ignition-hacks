@@ -443,6 +443,28 @@ input:focus, textarea:focus, .money-input:focus-within {
   width: auto;
 }
 
+.temporary-section {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--card);
+}
+
+.temporary-section h2 {
+  margin-top: 0;
+}
+
+.temporary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.temporary-actions button {
+  padding: 0.7rem 0.9rem;
+}
+
 @media (max-width: 560px) {
   .temporary-details { grid-template-columns: 1fr; }
 }

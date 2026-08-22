@@ -1,13 +1,14 @@
 import { CreateEventForm } from "./create-event-form";
+import Link from "next/link";
 
 export default function Home() {
   return (
     <main className="create-page">
       <nav className="topbar" aria-label="Primary navigation">
-        <a className="brand" href="/" aria-label="SnapPlan home">
+        <Link className="brand" href="/" aria-label="SnapPlan home">
           <span className="brand-mark" aria-hidden="true">S</span>
           <span>SnapPlan</span>
-        </a>
+        </Link>
         <span className="working-label">working title</span>
       </nav>
 
