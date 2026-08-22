@@ -131,29 +131,32 @@ Planned temporary name: `SnapPlan Venue Booker`.
 - Returns `needs_host` instead of guessing when a counter-offer exceeds scope.
 - Never calls a real venue without an explicit host booking action.
 
-ElevenLabs generates the agent ID after creation. Outbound calls also require a
-caller phone-number ID connected to ElevenLabs. The user's personal phone is
-only the initial test destination unless it has separately been configured as
-a verified caller ID.
+ElevenLabs agent `agent_7201m0n8298tevzb02txvftpzmq2` has been created and
+configured with this behavior. Outbound calls also require a caller
+phone-number ID connected to ElevenLabs. The user's personal phone is only the
+initial test destination unless it has separately been configured as a
+verified caller ID.
 
 ## Credential Status
 
 Secrets live only in local `.env` and hosted runtime configuration.
 
 - ElevenLabs API key: present locally; not committed.
-- ElevenLabs agent ID: not created yet.
-- ElevenLabs caller phone-number ID: not confirmed yet.
+- ElevenLabs agent ID: created, configured, and saved locally.
+- ElevenLabs caller phone-number ID: none are connected to the account.
 - ElevenLabs webhook secret: not created yet.
 - Test destination number: missing from local `.env`.
-- World Labs key: missing from this repository's local `.env`; the World Labs
-  integration agent may hold it separately.
+- World Labs key: present locally under `WORLD_LABS_KEY`; the World Labs
+  adapter must normalize this noncanonical alias or migrate it to
+  `WLT_API_KEY`.
 
 ## Critical Path
 
 1. Add Base44-safe guest identity and restricted CORS support.
 2. Add event lock-in and a validated immutable booking brief.
 3. Add durable booking attempts and their state machine.
-4. Create the ElevenLabs agent and inspect connected caller numbers.
+4. Connect a Twilio number or verified caller ID to the configured ElevenLabs
+   agent.
 5. Add outbound-call dispatch and an HMAC-verified post-call webhook.
 6. Run a test call only to the configured test destination.
 7. Connect Base44 and World Labs work through the documented contracts.
@@ -162,7 +165,7 @@ Secrets live only in local `.env` and hosted runtime configuration.
 ## Current Blockers and Risks
 
 - `ELEVENLABS_TEST_TO_NUMBER` is not present locally.
-- A usable ElevenLabs/Twilio caller number has not been confirmed.
+- The ElevenLabs account currently has zero connected caller numbers.
 - The final Base44 origin is not known, so the production CORS allowlist cannot
   be finalized.
 - World generation is asynchronous and can take minutes; the fallback scene is
@@ -183,7 +186,8 @@ Secrets live only in local `.env` and hosted runtime configuration.
 - [ ] World Labs generation and dependable fallback.
 - [ ] Event lock-in and booking brief.
 - [ ] Booking-attempt persistence.
-- [ ] ElevenLabs agent and connected caller number.
+- [x] ElevenLabs venue-booking agent configuration.
+- [ ] Connected ElevenLabs/Twilio caller number.
 - [ ] Signed ElevenLabs webhook handling.
 - [ ] Test phone call and captured outcome.
 - [ ] Complete judged-demo rehearsal.
@@ -198,3 +202,6 @@ Secrets live only in local `.env` and hosted runtime configuration.
 - Recorded ElevenLabs prerequisites without exposing credentials.
 - Identified the shortest remaining path to the hackathon demo.
 - Reverified the coordination baseline and recorded the required Node runtime.
+- Created and configured the ElevenLabs venue-booking agent.
+- Confirmed that no caller number is connected and no test destination is set.
+- Corrected the local World Labs key status and recorded its env-name mismatch.
