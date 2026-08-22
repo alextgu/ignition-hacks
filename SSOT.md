@@ -5,7 +5,33 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** by the integrations agent (ElevenLabs module)
+- Last updated: **2026-08-22** by the integrations agent (Base44 build track)
+
+---
+
+## 0. OPEN DECISION — Base44 vs the hand-built app
+
+**This needs settling before more app work happens, by Simon + codex.**
+
+We are starting a Base44 build (prompts in `docs/base44/`). Base44 generates
+the entire app — entities, routes, UI — which is the same territory the
+coordination-spine agent owns. Two coherent options:
+
+- **Base44 replaces the hand-built app.** Codex stops on
+  scaffolding/DB/routes and moves to Base44 prompt review + demo polish. The
+  `src/integrations/**` modules become reference implementations, and their
+  verified API contracts get carried into Base44 backend functions.
+- **Base44 is a parallel track.** Then neither track finishes. Not
+  recommended.
+
+Until this is decided, **do not start new app-layer work in either place.**
+Recommendation: go all-in on Base44 — it's the fastest path to acceptance
+criteria 1–5, which currently block everything else.
+
+Port note: Base44 backend functions run **Deno**. The existing TS modules use
+`node:crypto` and `Buffer`, which Deno supports via explicit `node:`
+specifiers (`import { Buffer } from "node:buffer"`). The port is mechanical;
+the contracts are the valuable part.
 
 ---
 
@@ -23,6 +49,9 @@ work — see `AGENTS.md` Rule 0.**
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock, 65 tests green | 2026-08-22 |
 | Spatial-art UI (scene panel, guest overlays) | unassigned | **Not started** | 2026-08-22 |
 | Ready-to-plan → booking handoff UI | unassigned | **Not started** | 2026-08-22 |
+| Base44 build prompts (4 staged) | integrations agent | **Done** — ready to paste | 2026-08-22 |
+| Base44 app build | Simon (on platform) | **Not started** | 2026-08-22 |
+| Landing / demo site | Simon (on platform) | **Not started** | 2026-08-22 |
 
 > Coordination-spine rows say "not present on `main`" because nothing for
 > them has landed on `main` yet. Codex may well have work in progress
@@ -217,6 +246,33 @@ started until 1–5 work.
   no dependencies. If the spine adopts Vitest/Jest, the existing tests port
   over cleanly (they only use `node:test` + `node:assert`).
 
+### Base44 findings (verified 2026-08-22)
+
+All the platform features we planned on are real: Deno runtime with `npm:`
+imports, `secrets.get()` and `waitUntil()` from `base44:runtime`,
+`asServiceRole.entities`, `.subscribe()` realtime, 5-minute function timeout,
+webhooks at `https://<app-domain>/functions/<function-name>`.
+
+Three decisions came out of checking them:
+
+- **Apple/Google Wallet passes are cut.** `.pkpass` files must be signed with
+  a Pass Type ID certificate from a paid Apple Developer account ($99/yr,
+  1–2 days to provision) — there is no workaround, and iOS rejects unsigned
+  passes. Google Wallet needs an approved Issuer account. Replaced with a
+  **web pass page + real `.ics` download**, which needs no certificates and
+  is closer to what project.md asks for anyway.
+- **Payment splitting is cut.** project.md lists payment collection as an
+  explicit non-goal for this slice. A graph-minimization settlement engine is
+  scope creep that judges won't see the point of.
+- **`waitUntil()` must not place phone calls.** Base44's docs say it is
+  best-effort and "isn't guaranteed to complete or retry." Placing a call is
+  critical; do it inline (it returns in <1s) and poll. `waitUntil()` is for
+  logging only.
+
+The live call telemetry stream is the keeper of the three ideas, and it works
+with zero credentials because the mock adapter already simulates a call over
+~12s with a progressively revealed transcript.
+
 ### Watch out for
 - Node's `--experimental-strip-types` rejects **constructor parameter
   properties** and requires **`.ts` import extensions**. This has already
@@ -252,6 +308,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | integrations | Base44 track: 4 staged build prompts in `docs/base44/` with verified vendor API contracts embedded. Verified Base44 capabilities; cut Wallet passes (cert blocker) and payment splitting (non-goal); flagged `waitUntil()` misuse. Raised the Base44-vs-hand-built decision as §0. |
 | 2026-08-22 | integrations | ElevenLabs booking agent: contract, brief→call-script mapper, real adapter, deterministic simulated call, 65 tests, setup doc. Extracted `shared/httpJson.ts`. Added `SSOT.md` + `AGENTS.md`. |
 | 2026-08-22 | integrations | World Labs: contract, prompt mapper, real adapter (Marble World API), deterministic mock, 29 tests, setup doc. |
 | 2026-08-22 | — | `project.md` product spec defined. |
