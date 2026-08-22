@@ -42,7 +42,7 @@ contracts.
 | Unified + named friend links | coordination spine | **Backend deployed; Base44 preview verified** — public UI publish pending | 2026-08-22 |
 | Twilio/ElevenLabs live call path | coordination spine | **Done** — dry-run + live/mock dispatch + status poll | 2026-08-22 |
 | World Labs integration | integrations agent | **Done** — text/image/multi-image, render assets exposed | 2026-08-22 |
-| World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Deployed** — hosted key active; Base44 preview iframe handoff verified; live credit not yet exercised | 2026-08-22 |
+| World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Deployed + live verified** — real panorama completed in 338s; Base44 preview iframe handoff verified | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
 | Finished Base44 UI | Base44 / Simon | **Done** — published with live API adapter | 2026-08-22 |
 | In-app world viewer (SparkJS, base + walk cameras) | unassigned | **Not started** — dependency-free panorama canvas ships instead; splat URLs already served | 2026-08-22 |
@@ -422,11 +422,11 @@ with zero credentials because the mock adapter already simulates a call over
 
 ### World Labs app wiring — what is true after 2026-08-22
 
-- **Verified without spending a credit.** The real adapter was exercised
-  against a local stub of the Marble API: generate → operation stored →
-  throttle honoured → poll → panorama, splats and caption persisted → canvas
-  switched to the live world. The hosted secret is now active, but no live
-  generation has been run yet.
+- **Verified live with one credit.** A fresh production event completed the
+  full Marble path in 338 seconds: generate → operation stored → throttled
+  polling → panorama, viewer link and caption persisted → canvas ready. The
+  earlier local stub coverage still verifies splat persistence and failure
+  paths without spending additional credits.
 - **Redaction is enforced at the seed, and tested.** The event *title* is
   never sent (hosts put names in titles), and the description is stripped of
   emails, phone numbers, URLs, bare domains and @handles first. A test
@@ -471,6 +471,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | coordination spine | Spent one World Labs credit on the production demo event `plan-it-demo-rooftop-planet-party-d05d0a02`. The real job completed in 338 seconds with `live: true`, a panorama, Marble viewer link, and caption; no duplicate generation was started. |
 | 2026-08-22 | coordination spine | Stored `WORLDLABS_API_KEY` only in the Sites runtime, set the hosted timeout to 20 seconds, and redeployed the existing validated version with environment revision 4. Base44 receives only `worldUrl`; no credential was copied into Base44. No live Marble credit was used. |
 | 2026-08-22 | coordination spine | Published Sites version 5 and verified the Base44 editor handoff end to end: create returns `worldUrl`; create success, guest, and host Planet reuse the same app-owned iframe; one RSVP adds state without regenerating; fixtures remain labelled fallbacks. No live Marble credit was used because no hosted key is configured. |
 | 2026-08-22 | coordination spine | Hardened the ElevenLabs booking status route: it now validates the private management token before polling a provider call, with regression coverage. The fixed-number live/mock booking contract is unchanged. |
