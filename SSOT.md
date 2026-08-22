@@ -1,225 +1,307 @@
-# Plan-it — Single Source of Truth
+# SSOT.md — Plan-it single source of truth
 
-> **Project name:** Plan-it. This document is the authoritative
-> operational summary for the hackathon repository at
-> `/Users/agu/Desktop/ignition-hacks`.
+**Live build state. Every agent updates this file in the same commit as its
+work — see `AGENTS.md` Rule 0.**
 
-## Product Goal
+- Product spec: `project.md` (stable, don't edit)
+- Agent rules: `AGENTS.md`
+- Last updated: **2026-08-22** by coordination spine (Twilio wireframe merge)
 
-Plan-it moves a small social event from a vague idea to a bookable group
-decision. It collects availability and price comfort through one link, creates
-a shared spatial-art experience, and hands a confirmed event brief to an
-autonomous booking agent.
+---
 
-The hackathon slice is intentionally narrow:
+## 0. Two live tracks: Sites coordination spine + Base44 finished UI
 
-1. A host creates a lightweight event proposal.
-2. Guests submit availability and price comfort.
-3. The host reviews consensus and locks a decision.
-4. World Labs supplies the evolving visual centerpiece.
-5. ElevenLabs calls a venue when the event is ready to book.
+**Corrected 2026-08-22.** This repository contains:
 
-This is not a full trip planner, large-event ticketing platform, payment
-system, or production-grade venue marketplace.
+1. **Sites coordination spine (deployed)** — vinext/Cloudflare D1 app with
+   durable events/attendees, guest RSVP, management summaries, CORS for
+   Base44, and booking HTTP wireframes. Production harness:
+   `https://snapplan-temp.it-1ffd660360.chatgpt.site`
+2. **Integrations modules** under `src/integrations/**` — World Labs +
+   ElevenLabs real/mock adapters, reused by Sites routes and pasteable into
+   Base44 (`docs/base44/port/integration-bundle.md`).
+3. **Base44 finished UI** — owns the polished host/guest/manage experience via
+   `docs/base44/` prompts. Temporary Sites pages are harnesses only.
 
-## Repository and Git Rules
+Do not regenerate World Labs or ElevenLabs client code. Extend the existing
+contracts.
 
-- Work directly on `main`.
-- Do not create branches or worktrees unless the user explicitly requests one.
-- Preserve concurrent changes from the user and other agents.
-- Never commit API keys, webhook secrets, phone numbers, or other credentials.
-- `project.md` contains the fuller product rationale; this file tracks the
-  current implementation and operational truth.
+---
 
-## Current Implementation
+## 1. Where the build actually is
 
-The coordination foundation is implemented and deployed.
+| Area | Owner | Status | Updated |
+|---|---|---|---|
+| Sites coordination spine (routes, D1, RSVP) | coordination spine | **Done** — deployed harness | 2026-08-22 |
+| Persistence / data model (Event, Attendee) | coordination spine | **Done** on Sites; Base44 may mirror | 2026-08-22 |
+| Host creation / guest RSVP / manage harness | coordination spine | **Done** (temporary UI) | 2026-08-22 |
+| Base44-safe guest ID + CORS | coordination spine | **Done** | 2026-08-22 |
+| Twilio env + dry-run book / webhook routes | coordination spine | **Wireframe done** — dry-run default | 2026-08-22 |
+| World Labs integration | integrations agent | **Done** — real + mock | 2026-08-22 |
+| ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
+| Finished Base44 UI | Base44 / Simon | **Prompts ready** | 2026-08-22 |
+| Connected Twilio caller number in ElevenLabs | human + ElevenLabs | **Blocked** until number import | 2026-08-22 |
+| Event lock-in + booking-attempt persistence | coordination spine | **Not started** | 2026-08-22 |
 
-- Production site: `https://snapplan-temp.it-1ffd660360.chatgpt.site`
-- Runtime: React/TypeScript on Sites with Cloudflare D1.
-- Final UI: not in this repository; Base44 owns the finished interface.
-- Current pages: temporary functional harnesses only.
-- Durable models: `events` and `attendees`.
-- Guest identity: one editable attendee per event and anonymous browser ID;
-  cross-origin clients use `X-SnapPlan-Guest-Id`.
-- Host security: unguessable management token in the private management URL.
-- Event creation returns separate guest and management URLs.
-- Management state includes attendee, availability, and price summaries.
-- World fields already exist on events: status, embed URL, and preview image.
-- Verification baseline: 29 unit tests, the production build, the rendered-HTML
-  test, and lint pass with the required Node 22.13-or-newer runtime.
+### What a human can actually do right now
 
-### Stable HTTP Surface
+- Create an event, share guest/manage links, collect RSVPs, view consensus on
+  the deployed Sites harness.
+- Dry-run `POST /api/manage/{token}/book` (never places a live call by default).
+- Verify `POST /api/webhooks/elevenlabs` HMAC signatures when configured.
+- Run integration mocks with zero credentials via `src/integrations/**`.
 
-- `POST /api/events` — create an event.
-- `GET /api/events/{publicSlug}/rsvp` — load this guest's event and response.
-- `PUT /api/events/{publicSlug}/rsvp` — create or update this guest's response.
-- `GET /api/manage/{managementToken}` — load private host coordination state.
+---
 
-The exact request and response examples are documented in `README.md`.
+## 2. Module ownership
 
-## Agent Ownership Boundaries
+Do not edit files outside your lane. See `AGENTS.md` Rule 1.
 
-### Base44 Agent
+| Path | Owner |
+|---|---|
+| `src/integrations/worldlabs/**` | integrations agent |
+| `src/integrations/elevenlabs/**` | integrations agent |
+| `src/integrations/shared/**` | integrations agent |
+| `docs/world-labs-setup.md`, `docs/elevenlabs-setup.md` | integrations agent |
+| `package.json`, lockfiles, build config | coordination spine (codex) |
+| App routes, pages, components | coordination spine (codex) |
+| DB schema, migrations, queries | coordination spine (codex) |
+| Guest identity, RSVP, dashboard logic | coordination spine (codex) |
+| `SSOT.md`, `AGENTS.md`, `README.md`, `.env.example` | shared — append, never rewrite |
 
-Owns the finished host, guest, and management UI. It must consume the shared
-backend contracts rather than create a second event database. Provider keys
-must never be placed in Base44 client code.
+---
 
-### World Labs Agent
+## 3. Boundary contracts
 
-Owns `src/integrations/worldlabs/`, world-prompt mapping, asynchronous world
-generation, polling, fallbacks, and the browser rendering handoff. World
-generation starts once after event creation and must never block RSVPs.
+These are the only surfaces between the app and the integrations. Copy from
+here rather than reading the modules.
 
-The approved visual direction is **Lantern Diorama**: Marble 1.1 generates one
-cut-paper-and-clay world, while SnapPlan adds participant lanterns, warmer
-ambience, a ready-state constellation, and a future booked-state ticket seal.
-The embeddable route is `/world/{event-slug}`. Base44 owns only the surrounding
-layout and iframe dimensions.
+### World Labs — `src/integrations/worldlabs`
 
-### Coordination and Booking Backend
+```ts
+import { generateWorld, getWorldStatus } from "src/integrations/worldlabs";
 
-Owns shared API compatibility, event lock-in, the frozen booking brief,
-booking-attempt persistence, ElevenLabs dispatch, signed webhook processing,
-and confirmed booking state. This work must not implement final UI.
+type WorldSeed = {
+  description: string; eventType: string; mood: string; location: string;
+  timeCharacter: string; groupSize: number; priceCharacter: string;
+};
 
-## Required Integration Contracts
+type WorldResult = {
+  status: "pending" | "ready" | "failed";
+  embedUrl?: string; previewImageUrl?: string; externalId?: string; error?: string;
+};
 
-### Base44 Compatibility
+generateWorld(seed: WorldSeed): Promise<WorldResult>
+getWorldStatus(externalId: string): Promise<WorldResult>
+```
 
-The backend supports both its same-origin HTTP-only cookie and a cross-origin
-Base44 client. The implemented contract is:
+Usage notes for the app:
+- Call `generateWorld` **once**, at event creation. Never regenerate per RSVP.
+- Real generation takes **~5 minutes**. Store `externalId`, poll in the
+  background, show the fallback until `status === "ready"`.
+- With no API key, the mock returns `ready` **instantly** with a real
+  data-URI preview image and animated embed page. The flow always works.
 
-- Base44 creates one random anonymous guest ID per browser and persists it.
-- RSVP requests send it as `X-SnapPlan-Guest-Id`.
-- The backend validates the ID and retains the cookie path as a fallback.
-- CORS allows only configured frontend origins.
+### ElevenLabs booking agent — `src/integrations/elevenlabs`
 
-The known Base44 preview and published origins must be configured in the hosted
-`PLANIT_ALLOWED_ORIGINS` allowlist before cross-origin testing.
+```ts
+import { startBookingCall, getBookingCallStatus } from "src/integrations/elevenlabs";
 
-### Booking Brief
+type EventBrief = {
+  eventId: string; venueName: string; venuePhoneNumber: string; location: string;
+  partySize: number;
+  preferredWindows: Array<{ startIso: string; endIso: string }>;
+  budgetPerPerson?: number; currency?: string;
+  seatingPreference?: string; dietaryNotes?: string[];
+  hostName: string; hostCallbackNumber?: string;
+  negotiation: {
+    maxPricePerPerson?: number; timeFlexible: boolean;
+    acceptSplitSeating: boolean; timeToleranceMinutes?: number;
+  };
+};
 
-Lock-in freezes the values that the booking agent may use:
+type BookingCallResult = {
+  status: "pending" | "in_progress" | "completed" | "failed";
+  externalId?: string;
+  outcome?: "booked" | "declined" | "needs_followup" | "unknown";
+  confirmedTime?: string; confirmedPartySize?: number;
+  summary?: string;
+  transcript?: Array<{ role: "agent" | "user"; message: string; atSeconds: number }>;
+  durationSeconds?: number; error?: string;
+};
 
-- Event and host reference.
-- Venue name and phone number.
-- Chosen time plus acceptable alternatives.
-- Party size.
-- Budget or maximum price per person.
-- Seating preference.
-- Dietary and accessibility notes.
-- Maximum time negotiation delta, initially 45 minutes.
+startBookingCall(brief: EventBrief): Promise<BookingCallResult>
+getBookingCallStatus(externalId: string): Promise<BookingCallResult>
 
-The agent may not invent broader permissions or commit outside this brief.
+// For honest UI labelling — must not change whether the flow works:
+isLiveCallingConfigured(): boolean
+missingBookingAgentCredentials(): string[]
+```
 
-### Booking State
+Usage notes for the app:
+- `startBookingCall` returns immediately; the call runs for tens of seconds.
+  Poll `getBookingCallStatus` and render `transcript` live — that live
+  transcript is the demo moment worth building UI for.
+- **`outcome === "booked"` is the only state that means booked.** Anything
+  else, including `needs_followup`, must not render as a confirmed booking.
+- With no credentials the mock simulates a call over ~12s
+  (`pending` → `in_progress` with a progressively revealed transcript →
+  `completed`), built from the real brief. Set
+  `ELEVENLABS_MOCK_OUTCOME=declined` to demo graceful failure.
 
-A durable booking attempt must move through explicit states:
+### Both integrations guarantee
 
-`pending -> dispatching -> calling -> booked | failed | needs_host`
+- Never throw. Every failure becomes `status: "failed"` with a message.
+- Every HTTP call has a timeout.
+- Work with zero credentials, via a deterministic mock the caller can't
+  distinguish.
+- No secret ever reaches a log or an error message.
 
-Success requires an external confirmation. Store the channel, provider
-conversation ID, call ID when available, final time, confirmation code,
-transcript summary, notes, and failure reason. Webhook processing must be
-signature-verified and idempotent.
+---
 
-### ElevenLabs Agent
+## 4. Environment variables
 
-Planned temporary name: `SnapPlan Venue Booker`.
+Nothing is required to run the app — every integration falls back to its
+mock. `.env.example` documents both Sites and integration variables.
 
-- Friendly, concise, and professional.
-- Uses runtime event and venue variables.
-- Negotiates only inside the approved 45-minute window.
-- Confirms seating, dietary requirements, final time, and party size.
-- Repeats and records the confirmation code.
-- Returns `needs_host` instead of guessing when a counter-offer exceeds scope.
-- Never calls a real venue without an explicit host booking action.
+### World Labs
 
-ElevenLabs agent `agent_7201m0n8298tevzb02txvftpzmq2` has been created and
-configured with this behavior. Outbound calls also require a caller
-phone-number ID connected to ElevenLabs. The user's personal phone is only the
-initial test destination unless it has separately been configured as a
-verified caller ID.
+| Variable | Required | Default | Purpose |
+|---|---|---|---|
+| `WORLDLABS_API_KEY` | for real worlds | — | Secret key (`WLT-Api-Key` header) |
+| `WORLDLABS_BASE_URL` | no | `https://api.worldlabs.ai` | Override for tests |
+| `WORLDLABS_MODEL` | no | `marble-1.1` | `marble-1.1-plus` for larger scenes |
+| `WORLDLABS_TIMEOUT_MS` | no | `15000` | Per-call timeout |
+| `WORLDLABS_FORCE_MOCK` | no | `false` | Force the mock |
 
-## Credential Status
+### ElevenLabs
 
-Secrets live only in local `.env` and hosted runtime configuration.
+| Variable | Required | Default | Purpose |
+|---|---|---|---|
+| `ELEVENLABS_API_KEY` | for real calls | — | Secret key (`xi-api-key` header) |
+| `ELEVENLABS_AGENT_ID` | for real calls | — | Agent created once in the dashboard |
+| `ELEVENLABS_AGENT_PHONE_NUMBER_ID` | for real calls | — | Twilio number imported into ElevenLabs (alias: `ELEVENLABS_PHONE_NUMBER_ID`) |
+| `ELEVENLABS_WEBHOOK_SECRET` | for signed webhooks | — | HMAC secret for `ElevenLabs-Signature` |
+| `ELEVENLABS_TEST_TO_NUMBER` | for harness dry-runs | — | E.164 test destination only |
+| `TWILIO_SID` | for ElevenLabs import | — | Twilio Account SID |
+| `TWILIO_API_KEY` | for ElevenLabs import | — | Twilio Auth Token / API key secret |
+| `ELEVENLABS_BASE_URL` | no | `https://api.elevenlabs.io` | Override for tests |
+| `ELEVENLABS_TIMEOUT_MS` | no | `15000` | Per-call timeout |
+| `ELEVENLABS_USE_PROMPT_OVERRIDE` | no | `true` | Send code-built prompt per call (needs dashboard Security toggles) |
+| `ELEVENLABS_CALL_RECORDING_ENABLED` | no | `false` | Twilio recording — consent-sensitive |
+| `ELEVENLABS_FORCE_MOCK` | no | `false` | Force the mock |
+| `ELEVENLABS_MOCK_OUTCOME` | no | — | `booked` / `declined` / `needs_followup` / `unknown` |
 
-- ElevenLabs API key: present locally; not committed.
-- ElevenLabs agent ID: created, configured, and saved locally.
-- ElevenLabs caller phone-number ID: may be empty until Twilio is linked in
-  ElevenLabs Telephony; local `.env` may already hold a placeholder.
-- ElevenLabs webhook secret: optional until post-call webhooks are enabled.
-- Test destination number: present locally in E.164 format; not committed.
-- Twilio Account SID (`TWILIO_SID`) and Auth Token / API key secret
-  (`TWILIO_API_KEY`): present locally for importing the caller number into
-  ElevenLabs; SnapPlan still places outbound calls only through ElevenLabs.
-- World Labs key: present locally under `WORLD_LABS_KEY`; the World Labs
-  adapter must normalize this noncanonical alias or migrate it to
-  `WLT_API_KEY`.
+All three ElevenLabs credentials are needed **together**; any missing one
+falls back to the mock rather than failing at call time.
 
-## Critical Path
+---
 
-1. Connect the existing Base44 `planitApi` adapter to the deployed API.
-2. Add event lock-in and a validated immutable booking brief.
-3. Add durable booking attempts and their state machine.
-4. Connect a Twilio number or verified caller ID to the configured ElevenLabs
-   agent.
-5. Add outbound-call dispatch and an HMAC-verified post-call webhook.
-6. Run a test call only to the configured test destination.
-7. Connect Base44 and World Labs work through the documented contracts.
-8. Run the complete demo: create -> RSVP -> consensus -> lock -> call -> confirm.
+## 5. Demo readiness — project.md acceptance criteria
 
-## Current Blockers and Risks
+| # | Criterion | State |
+|---|---|---|
+| 1 | Host creates an event from a vague idea + constraints | ✅ Sites harness |
+| 2 | Host receives separate guest and management links | ✅ Sites harness |
+| 3 | Multiple guests on different browsers submit availability + price | ✅ Sites harness |
+| 4 | Same browser can't create duplicate attendees | ✅ Sites harness |
+| 5 | Host sees a clear consensus summary | ✅ Sites harness |
+| 6 | Recognizable spatial-art experience with dependable fallback | 🟡 **integration done**, needs UI |
+| 7 | Ready-to-plan state with booking/seating/requirements actions | 🟡 **booking integration done**, needs UI |
+| 8 | Shared link has event-specific preview text and imagery | ❌ needs app (`previewImageUrl` is ready to use) |
 
-- The ElevenLabs account currently has zero connected caller numbers.
-- The Base44 interface still defaults to fixture data until its adapter is
-  switched to the deployed API.
-- World generation is asynchronous and can take minutes; the fallback scene is
-  mandatory for a reliable demo.
-- Online autonomous booking is a provider extension. The real hackathon path
-  should prioritize the ElevenLabs venue call and fall back cleanly.
+**Critical path to a demo: the coordination spine.** Both sponsor
+integrations are done and cannot block anything. Nothing else should be
+started until 1–5 work.
 
-## Demo Completion Checklist
+---
 
-- [x] Durable event and attendee storage.
-- [x] Host event creation.
-- [x] Separate guest and management links.
-- [x] One editable RSVP per anonymous browser.
-- [x] Availability and price consensus summary.
-- [x] Public deployment of the temporary functional harness.
-- [x] Base44 cross-origin API compatibility.
-- [ ] Finished Base44 interface.
-- [ ] World Labs generation and dependable fallback.
-- [ ] Event lock-in and booking brief.
-- [ ] Booking-attempt persistence.
-- [x] ElevenLabs venue-booking agent configuration.
-- [x] Twilio/ElevenLabs outbound call wireframe (dry-run default).
-- [ ] Connected ElevenLabs/Twilio caller number (import Twilio into ElevenLabs).
-- [x] Signed ElevenLabs webhook verification stub.
-- [ ] Booking-attempt persistence after webhook events.
-- [ ] Test phone call and captured outcome.
-- [ ] Complete judged-demo rehearsal.
+## 6. Known gaps, risks, and decisions to make
 
-## Change Record
+### Blocking
+- Import a Twilio number into ElevenLabs Telephony and set
+  `ELEVENLABS_PHONE_NUMBER_ID` before any live demo call.
+- Event lock-in + durable booking attempts are still missing on the spine.
 
-### 2026-08-22 — Initial repository SSOT
+### Needs a decision
+- **World Labs iframe embedding is unverified.** The docs don't document an
+  official iframe-embed contract (CORS / `X-Frame-Options`) for
+  `world_marble_url`. Test it in a browser early. If it won't embed, open it
+  in a new tab — plan the UI so either works.
+- **Git identity.** Commits so far used a local `user.email` on the
+  worktrees because the repo had none configured. Reconcile before judging if
+  commit attribution matters.
+- **Test runner.** Currently Node's built-in runner with type-stripping and
+  no dependencies. If the spine adopts Vitest/Jest, the existing tests port
+  over cleanly (they only use `node:test` + `node:assert`).
 
-- Recorded the implemented coordination foundation and deployment.
-- Separated Base44, World Labs, and booking-backend ownership.
-- Defined the Base44 identity boundary and booking state contract.
-- Recorded ElevenLabs prerequisites without exposing credentials.
-- Identified the shortest remaining path to the hackathon demo.
-- Reverified the coordination baseline and recorded the required Node runtime.
-- Created and configured the ElevenLabs venue-booking agent.
-- Confirmed that no caller number is connected.
-- Saved the user-provided test destination locally without recording it here.
-- Corrected the local World Labs key status and recorded its env-name mismatch.
-- Approved the Marble 1.1 plus SparkJS embeddable-canvas architecture and the
-  Lantern Diorama visual system.
-- Renamed the product to Plan-it and implemented the Base44-safe guest ID,
-  restricted CORS boundary, and public guest-event API response.
-- Added Twilio env placeholders and an ElevenLabs outbound-call wireframe with
-  dry-run booking and HMAC webhook verification stubs.
+### Base44 findings (verified 2026-08-22)
+
+All the platform features we planned on are real: Deno runtime with `npm:`
+imports, `secrets.get()` and `waitUntil()` from `base44:runtime`,
+`asServiceRole.entities`, `.subscribe()` realtime, 5-minute function timeout,
+webhooks at `https://<app-domain>/functions/<function-name>`.
+
+Three decisions came out of checking them:
+
+- **Apple/Google Wallet passes are cut.** `.pkpass` files must be signed with
+  a Pass Type ID certificate from a paid Apple Developer account ($99/yr,
+  1–2 days to provision) — there is no workaround, and iOS rejects unsigned
+  passes. Google Wallet needs an approved Issuer account. Replaced with a
+  **web pass page + real `.ics` download**, which needs no certificates and
+  is closer to what project.md asks for anyway.
+- **Payment splitting is cut.** project.md lists payment collection as an
+  explicit non-goal for this slice. A graph-minimization settlement engine is
+  scope creep that judges won't see the point of.
+- **`waitUntil()` must not place phone calls.** Base44's docs say it is
+  best-effort and "isn't guaranteed to complete or retry." Placing a call is
+  critical; do it inline (it returns in <1s) and poll. `waitUntil()` is for
+  logging only.
+
+The live call telemetry stream is the keeper of the three ideas, and it works
+with zero credentials because the mock adapter already simulates a call over
+~12s with a progressively revealed transcript.
+
+### Watch out for
+- Node's `--experimental-strip-types` rejects **constructor parameter
+  properties** and requires **`.ts` import extensions**. This has already
+  bitten once. See `AGENTS.md` Rule 6.
+- **Don't point the voice agent at a real restaurant during judging.** Use
+  your own phone or the mock. Live venue calls are unreliable (IVR, hold,
+  hang-ups) and unfair to the venue.
+- **Never render `needs_followup` as a booking.** Criterion for not
+  embarrassing ourselves in front of judges.
+
+### Cross-module requests
+_(Need a change in someone else's files? Write it here instead of editing
+them.)_
+
+- **To coordination spine:** add `world_external_id` and
+  `booking_call_external_id` opaque strings on events when lock-in lands.
+- **To integrations:** webhook persistence should update booking attempts once
+  the spine adds that table; current route only verifies signatures.
+- **Resolved:** `.env.example` and Sites `package.json` now exist on main.
+
+---
+
+## 7. Commands
+
+```sh
+# Sites unit tests
+npm run test:unit
+
+# Integration module tests (no network, no credentials needed)
+node --experimental-strip-types --test src/integrations/worldlabs/__tests__/*.test.ts
+node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.test.ts
+```
+
+## 8. Changelog
+
+| Date | Agent | Change |
+|---|---|---|
+| 2026-08-22 | coordination spine | Merged Sites app with integrations track. Added Twilio env placeholders, dry-run `POST /api/manage/{token}/book`, and HMAC `POST /api/webhooks/elevenlabs`. Corrected §0: Sites harness is deployed. |
+| 2026-08-22 | integrations | Made `src/integrations/**` runtime-agnostic (dropped `Buffer`/`node:crypto`/`process.env` for web standards) so Base44's Deno runtime reuses them verbatim; 94 tests still green. Rewrote prompt 2 to wire them in instead of rebuilding. Added `port/integration-bundle.md`. Settled §0 after confirming the attached folder is the whole codebase. |
+| 2026-08-22 | integrations | Base44 track: 4 staged build prompts in `docs/base44/` with verified vendor API contracts embedded. Verified Base44 capabilities; cut Wallet passes (cert blocker) and payment splitting (non-goal); flagged `waitUntil()` misuse. Raised the Base44-vs-hand-built decision as §0. |
+| 2026-08-22 | integrations | ElevenLabs booking agent: contract, brief→call-script mapper, real adapter, deterministic simulated call, 65 tests, setup doc. Extracted `shared/httpJson.ts`. Added `SSOT.md` + `AGENTS.md`. |
+| 2026-08-22 | integrations | World Labs: contract, prompt mapper, real adapter (Marble World API), deterministic mock, 29 tests, setup doc. |
+| 2026-08-22 | — | `project.md` product spec defined. |

@@ -1,9 +1,9 @@
 import { env } from "cloudflare:workers";
-import type { BookingEnv } from "../../../../src/integrations/elevenlabs/config";
+import type { EnvLike } from "../../../../src/integrations/elevenlabs/config";
 import { createElevenLabsWebhookHandler } from "./handler";
 
 const handle = createElevenLabsWebhookHandler({
-  getEnv: () => env as BookingEnv,
+  getEnv: () => env as unknown as EnvLike,
 });
 
 export async function POST(request: Request) {

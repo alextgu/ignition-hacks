@@ -1,13 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  bookingReadinessSummary,
-  loadBookingConfig,
+  describeConfig,
+  loadConfig,
 } from "../src/integrations/elevenlabs/config.ts";
-import {
-  OUTBOUND_CALL_URL,
-  dispatchOutboundCall,
-} from "../src/integrations/elevenlabs/outbound.ts";
 import { verifyElevenLabsWebhook } from "../src/integrations/elevenlabs/webhook.ts";
 import { createBookHandler } from "../app/api/manage/[token]/book/handler.ts";
 import { createElevenLabsWebhookHandler } from "../app/api/webhooks/elevenlabs/handler.ts";
@@ -50,21 +46,21 @@ async function signBody(secret: string, timestamp: string, rawBody: string) {
   return `t=${timestamp},v0=${hex}`;
 }
 
-test("reports live-call readiness from env", () => {
-  const incomplete = loadBookingConfig({
+test("reports Twilio and live-call readiness from env", () => {
+  const incomplete = loadConfig({
     TWILIO_SID: "ACxxx",
     TWILIO_API_KEY: "secret",
   });
-  assert.equal(incomplete.readyForLiveCall, false);
-  assert.deepEqual(bookingReadinessSummary(incomplete).missingForLiveCall, [
+  const summary = describeConfig(incomplete);
+  assert.equal(summary.usingRealAdapter, false);
+  assert.equal(summary.twilioCredentialsConfigured, true);
+  assert.deepEqual(summary.missingCredentials, [
     "ELEVENLABS_API_KEY",
     "ELEVENLABS_AGENT_ID",
-    "ELEVENLABS_PHONE_NUMBER_ID",
-    "ELEVENLABS_TEST_TO_NUMBER",
+    "ELEVENLABS_AGENT_PHONE_NUMBER_ID",
   ]);
-  assert.equal(bookingReadinessSummary(incomplete).hasTwilioCredentials, true);
 
-  const ready = loadBookingConfig({
+  const ready = loadConfig({
     ELEVENLABS_API_KEY: "key",
     ELEVENLABS_AGENT_ID: "agent_1",
     ELEVENLABS_PHONE_NUMBER_ID: "phone_1",
@@ -72,78 +68,8 @@ test("reports live-call readiness from env", () => {
     TWILIO_SID: "ACxxx",
     TWILIO_API_KEY: "secret",
   });
-  assert.equal(ready.readyForLiveCall, true);
-});
-
-test("dry-run outbound dispatch never calls ElevenLabs", async () => {
-  let called = false;
-  const result = await dispatchOutboundCall(
-    loadBookingConfig({
-      ELEVENLABS_API_KEY: "key",
-      ELEVENLABS_AGENT_ID: "agent_1",
-      ELEVENLABS_PHONE_NUMBER_ID: "phone_1",
-      ELEVENLABS_TEST_TO_NUMBER: "+15551234567",
-    }),
-    { toNumber: "+15551234567" },
-    {
-      live: false,
-      fetchImpl: async () => {
-        called = true;
-        return new Response("{}");
-      },
-    },
-  );
-
-  assert.equal(called, false);
-  assert.deepEqual(result, {
-    ok: true,
-    mode: "dry_run",
-    request: {
-      agentId: "agent_1",
-      phoneNumberId: "phone_1",
-      toNumber: "+15551234567",
-    },
-  });
-});
-
-test("live outbound dispatch posts to ElevenLabs Twilio endpoint", async () => {
-  const result = await dispatchOutboundCall(
-    loadBookingConfig({
-      ELEVENLABS_API_KEY: "key",
-      ELEVENLABS_AGENT_ID: "agent_1",
-      ELEVENLABS_PHONE_NUMBER_ID: "phone_1",
-      ELEVENLABS_TEST_TO_NUMBER: "+15551234567",
-    }),
-    { toNumber: "+15551234567" },
-    {
-      live: true,
-      fetchImpl: async (url, init) => {
-        assert.equal(url, OUTBOUND_CALL_URL);
-        assert.equal(init?.method, "POST");
-        const headers = new Headers(init?.headers);
-        assert.equal(headers.get("xi-api-key"), "key");
-        assert.deepEqual(JSON.parse(String(init?.body)), {
-          agent_id: "agent_1",
-          agent_phone_number_id: "phone_1",
-          to_number: "+15551234567",
-        });
-        return Response.json({
-          success: true,
-          message: "ok",
-          conversation_id: "conv_1",
-          callSid: "CA123",
-        });
-      },
-    },
-  );
-
-  assert.deepEqual(result, {
-    ok: true,
-    mode: "live",
-    conversationId: "conv_1",
-    callSid: "CA123",
-    message: "ok",
-  });
+  assert.equal(describeConfig(ready).usingRealAdapter, true);
+  assert.equal(ready.testToNumber, "+15551234567");
 });
 
 test("book endpoint defaults to dry run", async () => {
@@ -161,9 +87,6 @@ test("book endpoint defaults to dry run", async () => {
         TWILIO_SID: "ACxxx",
         TWILIO_API_KEY: "secret",
       }),
-      fetchImpl: async () => {
-        throw new Error("should not fetch");
-      },
     },
   );
 
@@ -177,7 +100,7 @@ test("book endpoint defaults to dry run", async () => {
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.booking.mode, "dry_run");
-  assert.equal(body.readiness.hasTwilioCredentials, true);
+  assert.equal(body.readiness.twilioCredentialsConfigured, true);
 });
 
 test("verifies ElevenLabs webhook signatures", async () => {
