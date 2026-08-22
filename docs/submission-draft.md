@@ -24,39 +24,11 @@ as one word, fits hangouts and parties, and keeps the planet logo intact.]*
 
 ## Inspiration
 
-This started as a throwaway line from my CEO.
-
-I was interning at an events AI startup, and he mentioned offhand how cool it
-would be to have really quick event setup and invites. It stuck with me,
-because I'd been hitting the same wall in my own life — planning a hangout, a
-birthday party, a corporate mixer. Three completely different events, all
-falling apart in exactly the same place.
-
-**The problem isn't planning. It's that every tool assumes you already know
-the answer.**
-
-Eventbrite, Partiful, a calendar invite — they all start the same way: enter
-the date, enter the venue, send it out, collect yes or no. That works when the
-details are already settled.
-
-But that's not how real plans start. Real plans start with *"we should do
-something next week"* — and the date, the place, and the budget are the things
-you're trying to *figure out*. They're the output, not the input. So people
-fall back to the group chat, which has the opposite problem: infinitely
-flexible, and it never converges. Forty messages later there's no decision,
-one person has quietly decided it's too expensive to say out loud, and the
-plan dies.
-
-And even when a group does agree, it stalls one step from the finish line,
-because somebody still has to pick up the phone and call the venue. Nobody
-volunteers for that.
-
-So the gap I kept running into was a specific one: **small, quick events where
-nobody knows the details yet, and someone still has to make the booking
-happen.** Too informal for event software, too consequential for a group chat.
-
-Plan-it is my attempt at that middle. You start with the vague version, the
-group converges on the link, and the booking makes itself.
+Somewhere during my internship at an Events AI startup, the CEO mentioned how
+it would be cool to have a quick event setup and invite. To be an outstanding
+intern and to kill two birds with one stone, I brought my personal experiences
+with planning quick events (a hangout, party, corporate event) into this
+project.
 
 ## What it does
 
