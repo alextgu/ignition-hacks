@@ -5,8 +5,8 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** — Plan-it's miniature floating planet prompt
-  deployed and visually verified with a real World Labs generation
+- Last updated: **2026-08-22** — current Base44 editor published; corrected
+  World Labs planet verified inside the public Plan-it guest experience
 
 ---
 
@@ -39,12 +39,12 @@ contracts.
 | Persistence / data model (Event, Attendee, Invitation) | coordination spine | **Done** on Sites; Base44 may mirror | 2026-08-22 |
 | Host creation / guest RSVP / manage harness | coordination spine | **Done** (temporary UI) | 2026-08-22 |
 | Base44-safe guest ID + CORS | coordination spine | **Done** | 2026-08-22 |
-| Unified + named friend links | coordination spine | **Backend deployed; Base44 preview verified** — public UI publish pending | 2026-08-22 |
+| Unified + named friend links | coordination spine | **Backend + Base44 public UI deployed** | 2026-08-22 |
 | Twilio/ElevenLabs live call path | coordination spine | **Done** — dry-run + live/mock dispatch + status poll | 2026-08-22 |
 | World Labs integration | integrations agent | **Deployed + live verified** — miniature event-planetoid composition; text/image/multi-image and render assets retained | 2026-08-22 |
-| World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Deployed + live verified** — corrected planet panorama completed in 326s; Base44 preview iframe handoff verified | 2026-08-22 |
+| World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Deployed + live verified** — corrected planet panorama completed in 326s; Base44 public iframe verified | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
-| Finished Base44 UI | Base44 / Simon | **Done** — published with live API adapter | 2026-08-22 |
+| Finished Base44 UI | Base44 / Simon | **Done** — current editor published with live API adapter, world iframe/loading state and recap flow | 2026-08-22 |
 | In-app world viewer (SparkJS, base + walk cameras) | unassigned | **Not started** — dependency-free panorama canvas ships instead; splat URLs already served | 2026-08-22 |
 | Connected Twilio caller number in ElevenLabs | human + ElevenLabs | **Blocked** until number import | 2026-08-22 |
 | Event lock-in + booking-attempt persistence | coordination spine | **Not started** | 2026-08-22 |
@@ -74,6 +74,11 @@ contracts.
   elevated view of a circular floating surface with the venue, seating,
   lighting and location cues arranged as small landmarks. The production
   `Sunset Picnic Planet` validation produced this view without an interior.
+- The public Base44 guest route embeds that same Sites-owned world iframe,
+  shows a loading bar while it initializes, removes the loading state once
+  ready, and retains an `Open world` fallback link. A production check of the
+  `Sunset Picnic Planet` route rendered the live World Labs canvas with zero
+  browser console errors; Base44 has no World Labs credential.
 - Open `/world/{slug}` — the embeddable canvas. It shows the generated
   panorama once Marble finishes, the deterministic planet until then, and
   one light per RSVP in every state.
@@ -346,7 +351,7 @@ falls back to the mock rather than failing at call time.
 | 2 | Host receives separate guest and management links | ✅ Base44 + Sites |
 | 3 | Multiple guests on different browsers submit availability + price | ✅ Base44 + Sites |
 | 4 | Same browser can't create duplicate attendees | ✅ Base44 + Sites |
-| 4a | Named friend link can't create duplicate attendees across browsers | ✅ Sites live + Base44 preview; public UI publish pending |
+| 4a | Named friend link can't create duplicate attendees across browsers | ✅ Sites + Base44 public UI |
 | 5 | Host sees a clear consensus summary | ✅ Base44 + Sites |
 | 6 | Recognizable spatial-art experience with dependable fallback | ✅ **Live** — `/world/{slug}` renders the generated panorama, planet fallback otherwise |
 | 7 | Ready-to-plan state with booking/seating/requirements actions | ✅ Honest pending/dry-run UI |
@@ -366,7 +371,7 @@ is already live and verified.
 - Event lock-in + durable booking attempts are still missing on the spine.
 
 ### Needs a decision
-- **Resolved for the app-owned canvas:** Base44 editor preview embeds the Sites
+- **Resolved for the app-owned canvas:** Base44's public UI embeds the Sites
   `/world/{slug}` route successfully on create success, guest, and host Planet
   views, with an `Open world` fallback link. This does not claim the external
   World Labs viewer URL itself is frameable.
@@ -378,8 +383,6 @@ is already live and verified.
   See `docs/world-labs-setup.md`.
 
 ### Next integration step
-- Publish the already-verified Base44 editor version so the public Plan-it UI
-  exposes named invitations and the shared `/world/{slug}` iframe handoff.
 - **Git identity.** Commits so far used a local `user.email` on the
   worktrees because the repo had none configured. Reconcile before judging if
   commit attribution matters.
@@ -487,6 +490,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | Base44 / coordination spine | Published the current Base44 editor to `valiant-sync-orbit-plan.base44.app`, including the Sites-owned World Labs iframe, animated loading state, recap flow and 1–4 date support. Production verification loaded `Sunset Picnic Planet` on the public guest route, removed the loading state after iframe readiness, retained the fallback link, and reported zero console errors. No credential was copied into Base44. |
 | 2026-08-22 | coordination spine | Published Sites version 6 and spent one credit on `plan-it-demo-sunset-picnic-planet-121e48b5`. It completed in 326 seconds with `live: true`; the panorama and caption show a handcrafted circular floating event diorama with table, lanterns and Toronto cues on its surface, and visual inspection confirmed there is no interior-room composition. |
 | 2026-08-22 | integrations | Replaced World Labs' explicit photographic-interior prompt with the approved Plan-it composition: complete miniature floating event planet, elevated three-quarter camera, event landmarks on the upper hemisphere, tactile clay/painted-wood style, and explicit first-person/interior exclusions. Added five prompt regressions and updated the existing mapping expectations; subsequently live-verified in Sites version 6. |
 | 2026-08-22 | coordination spine | Spent one World Labs credit on the production demo event `plan-it-demo-rooftop-planet-party-d05d0a02`. The real job completed in 338 seconds with `live: true`, a panorama, Marble viewer link, and caption; no duplicate generation was started. |
