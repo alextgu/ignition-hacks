@@ -36,8 +36,18 @@ const schemaStatements = [
     updated_at text NOT NULL,
     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
   )`,
+  `CREATE TABLE IF NOT EXISTS invitations (
+    id text PRIMARY KEY NOT NULL,
+    event_id text NOT NULL,
+    invitation_token text NOT NULL,
+    suggested_name text NOT NULL,
+    created_at text NOT NULL,
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+  )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_attendees_event_guest
     ON attendees(event_id, guest_id)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS invitations_token_unique
+    ON invitations(invitation_token)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS events_public_slug_unique
     ON events(public_slug)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS events_management_token_unique

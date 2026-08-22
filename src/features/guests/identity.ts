@@ -40,3 +40,13 @@ export function resolveGuestIdentity(
       `${cookieName}=${guestId}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax${secure}`,
   };
 }
+
+export function buildRsvpRequestPath(
+  slug: string,
+  invitationToken?: string,
+) {
+  const path = `/api/events/${slug}/rsvp`;
+  return invitationToken
+    ? `${path}?invite=${encodeURIComponent(invitationToken)}`
+    : path;
+}

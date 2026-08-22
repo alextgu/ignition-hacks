@@ -7,6 +7,13 @@ import { createEventService } from "../src/features/events/service.ts";
 function createMemoryRepository(): EventsRepository {
   const events: EventRecord[] = [];
   const attendees: AttendeeRecord[] = [];
+  const invitations: Array<{
+    id: string;
+    eventId: string;
+    token: string;
+    suggestedName: string;
+    createdAt: string;
+  }> = [];
 
   return {
     async insertEvent(event) {
@@ -42,6 +49,23 @@ function createMemoryRepository(): EventsRepository {
       else attendees[index] = structuredClone(attendee);
       return structuredClone(attendee);
     },
+    async insertInvitations(records) {
+      invitations.push(...structuredClone(records));
+      return structuredClone(records);
+    },
+    async findInvitation(eventId, token) {
+      return structuredClone(
+        invitations.find(
+          (invitation) =>
+            invitation.eventId === eventId && invitation.token === token,
+        ) ?? null,
+      );
+    },
+    async listInvitations(eventId) {
+      return structuredClone(
+        invitations.filter((invitation) => invitation.eventId === eventId),
+      );
+    },
   };
 }
 
@@ -64,6 +88,7 @@ function setup() {
     newId: () => `id-${++id}`,
     newPublicSlug: () => "cozy-abc123",
     newManagementToken: () => "manage-secret",
+    newInvitationToken: () => `invite-secret-${++id}`,
     now: () => "2026-08-22T12:00:00.000Z",
   });
   return service;
@@ -132,4 +157,43 @@ test("rejects a guest time that the host did not offer", async () => {
 
 test("returns null for an unknown public event", async () => {
   assert.equal(await setup().getEventBySlug("missing"), null);
+});
+
+test("creates named invitations that the host can recover", async () => {
+  const service = setup();
+  const created = await service.createEvent(validInput);
+  assert.equal(created.ok, true);
+  if (!created.ok) return;
+
+  const createInvitations = (
+    service as typeof service & {
+      createInvitations(
+        managementToken: string,
+        input: unknown,
+      ): Promise<{
+        ok: true;
+        invitations: Array<{ token: string; suggestedName: string }>;
+      }>;
+    }
+  ).createInvitations;
+  assert.equal(typeof createInvitations, "function");
+
+  const result = await createInvitations.call(
+    service,
+    created.event.managementToken,
+    { names: [" Alex ", "Sam"] },
+  );
+  assert.equal(result.ok, true);
+  assert.deepEqual(
+    result.invitations.map(({ suggestedName }) => suggestedName),
+    ["Alex", "Sam"],
+  );
+  assert.equal(new Set(result.invitations.map(({ token }) => token)).size, 2);
+
+  const managed = await service.getManagedEvent(created.event.managementToken);
+  assert.ok(managed);
+  assert.deepEqual(
+    managed.invitations.map(({ suggestedName }) => suggestedName),
+    ["Alex", "Sam"],
+  );
 });

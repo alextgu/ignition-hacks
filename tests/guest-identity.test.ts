@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { resolveGuestIdentity } from "../src/features/guests/identity.ts";
+import * as guestIdentity from "../src/features/guests/identity.ts";
 
 test("creates a persistent secure guest identity", () => {
   const identity = resolveGuestIdentity(
@@ -57,4 +58,21 @@ test("omits Secure only for local development", () => {
     () => "local-guest",
   );
   assert.doesNotMatch(identity.setCookie ?? "", /; Secure$/);
+});
+
+test("preserves a named invitation when the guest form calls the RSVP API", () => {
+  const buildRsvpRequestPath = (
+    guestIdentity as typeof guestIdentity & {
+      buildRsvpRequestPath: (slug: string, invitationToken?: string) => string;
+    }
+  ).buildRsvpRequestPath;
+  assert.equal(typeof buildRsvpRequestPath, "function");
+  assert.equal(
+    buildRsvpRequestPath("dinner-party", "invite token/unsafe"),
+    "/api/events/dinner-party/rsvp?invite=invite%20token%2Funsafe",
+  );
+  assert.equal(
+    buildRsvpRequestPath("dinner-party"),
+    "/api/events/dinner-party/rsvp",
+  );
 });

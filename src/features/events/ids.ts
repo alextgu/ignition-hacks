@@ -24,6 +24,10 @@ export function createManagementToken(token = randomToken(24)) {
   return token;
 }
 
+export function createInvitationToken(token = randomToken(24)) {
+  return token;
+}
+
 export function buildEventLinks(
   origin: string,
   publicSlug: string,

@@ -1,5 +1,6 @@
 import type {
   CreateEventInput,
+  CreateInvitationsInput,
   ParseResult,
   PriceResponse,
   UpsertAttendeeInput,
@@ -120,4 +121,27 @@ export function parseAttendeeInput(
     ok: true,
     value: { displayName, selectedTimeOptions, priceResponse },
   };
+}
+
+export function parseCreateInvitationsInput(
+  value: unknown,
+): ParseResult<CreateInvitationsInput> {
+  if (!value || typeof value !== "object") {
+    return { ok: false, error: "Add at least one friend name." };
+  }
+  const input = value as Record<string, unknown>;
+  if (!Array.isArray(input.names)) {
+    return { ok: false, error: "Add at least one friend name." };
+  }
+  const names = input.names.map(text);
+  if (names.length === 0 || names.some((name) => !name)) {
+    return { ok: false, error: "Add at least one friend name." };
+  }
+  if (names.length > 30) {
+    return { ok: false, error: "Create no more than 30 named links at once." };
+  }
+  if (names.some((name) => name.length > 60)) {
+    return { ok: false, error: "Keep each friend name under 60 characters." };
+  }
+  return { ok: true, value: { names } };
 }

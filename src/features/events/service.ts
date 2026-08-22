@@ -1,16 +1,26 @@
 import type {
   AttendeeRecord,
   EventRecord,
+  InvitationRecord,
   UpsertAttendeeInput,
 } from "./contracts";
-import { createManagementToken, createPublicSlug } from "./ids";
+import {
+  createInvitationToken,
+  createManagementToken,
+  createPublicSlug,
+} from "./ids";
 import type { EventsRepository } from "./repository";
-import { parseAttendeeInput, parseCreateEventInput } from "./validation";
+import {
+  parseAttendeeInput,
+  parseCreateEventInput,
+  parseCreateInvitationsInput,
+} from "./validation";
 
 export type EventServiceDependencies = {
   newId: () => string;
   newPublicSlug: (title: string) => string;
   newManagementToken: () => string;
+  newInvitationToken: () => string;
   now: () => string;
 };
 
@@ -18,6 +28,7 @@ export const defaultEventServiceDependencies: EventServiceDependencies = {
   newId: () => crypto.randomUUID(),
   newPublicSlug: createPublicSlug,
   newManagementToken: createManagementToken,
+  newInvitationToken: createInvitationToken,
   now: () => new Date().toISOString(),
 };
 
@@ -62,7 +73,37 @@ export function createEventService(
       return {
         event,
         attendees: await repository.listAttendees(event.id),
+        invitations: await repository.listInvitations(event.id),
       };
+    },
+
+    async createInvitations(token: string, input: unknown) {
+      const event = await repository.findEventByManagementToken(token);
+      if (!event) return { ok: false as const, error: "Event not found." };
+      const parsed = parseCreateInvitationsInput(input);
+      if (!parsed.ok) return parsed;
+
+      const createdAt = dependencies.now();
+      const records: InvitationRecord[] = parsed.value.names.map(
+        (suggestedName) => ({
+          id: dependencies.newId(),
+          eventId: event.id,
+          token: dependencies.newInvitationToken(),
+          suggestedName,
+          createdAt,
+        }),
+      );
+      return {
+        ok: true as const,
+        event,
+        invitations: await repository.insertInvitations(records),
+      };
+    },
+
+    async resolveInvitation(slug: string, token: string) {
+      const event = await repository.findEventBySlug(slug);
+      if (!event) return null;
+      return repository.findInvitation(event.id, token);
     },
 
     async getGuestResponse(slug: string, guestId: string) {

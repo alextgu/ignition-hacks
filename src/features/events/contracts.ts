@@ -34,6 +34,18 @@ export type AttendeeRecord = {
   updatedAt: string;
 };
 
+export type InvitationRecord = {
+  id: string;
+  eventId: string;
+  token: string;
+  suggestedName: string;
+  createdAt: string;
+};
+
+export type CreateInvitationsInput = {
+  names: string[];
+};
+
 export type UpsertAttendeeInput = {
   displayName: string;
   selectedTimeOptions: string[];

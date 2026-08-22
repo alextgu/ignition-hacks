@@ -35,9 +35,10 @@ contracts.
 | Area | Owner | Status | Updated |
 |---|---|---|---|
 | Sites coordination spine (routes, D1, RSVP) | coordination spine | **Done** — deployed harness | 2026-08-22 |
-| Persistence / data model (Event, Attendee) | coordination spine | **Done** on Sites; Base44 may mirror | 2026-08-22 |
+| Persistence / data model (Event, Attendee, Invitation) | coordination spine | **Done** on Sites; Base44 may mirror | 2026-08-22 |
 | Host creation / guest RSVP / manage harness | coordination spine | **Done** (temporary UI) | 2026-08-22 |
 | Base44-safe guest ID + CORS | coordination spine | **Done** | 2026-08-22 |
+| Unified + named friend links | coordination spine | **Backend done** — Base44 wiring pending publish | 2026-08-22 |
 | Twilio env + dry-run book / webhook routes | coordination spine | **Wireframe done** — dry-run default | 2026-08-22 |
 | World Labs integration | integrations agent | **Done** — text/image/multi-image, render assets exposed | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
@@ -54,6 +55,9 @@ contracts.
   `https://valiant-sync-orbit-plan.base44.app`; new events persist to D1.
 - Reopen an RSVP on the same browser to update the same attendee rather than
   create a duplicate.
+- Create recoverable named friend links through the private management API;
+  each link restores and updates one response even when opened on another
+  device. The unified browser-identity link remains available.
 - Dry-run `POST /api/manage/{token}/book` (never places a live call by default).
 - Verify `POST /api/webhooks/elevenlabs` HMAC signatures when configured.
 - Run integration mocks with zero credentials via `src/integrations/**`.
@@ -79,6 +83,21 @@ This audit covers the currently live coordination slice. It intentionally does
 not claim that sponsor integrations are routed yet: `/api/manage/{token}/book`
 is still a dry-run/readiness wireframe, the ElevenLabs webhook verifies but does
 not persist outcomes, and World Labs generation is not invoked by an app route.
+
+### Named invitation contract (implemented; production publish pending)
+
+- `POST /api/manage/{managementToken}/invitations` accepts
+  `{ "names": ["Alex", "Sam"] }` and returns shareable named guest URLs.
+- `GET /api/manage/{managementToken}` returns the unified guest URL plus all
+  recoverable named invitation URLs without echoing the management token.
+- `GET|PUT /api/events/{publicSlug}/rsvp?invite={invitationToken}` resolves the
+  invitation before browser identity, pre-fills its suggested name, and upserts
+  against a stable invitation-owned attendee identity.
+- An invalid or cross-event invitation token returns `404` and never falls back
+  to a new anonymous attendee.
+- The D1 `invitations` table owns unguessable invitation tokens and cascades
+  with its event. The unified link still uses `X-SnapPlan-Guest-Id` or the
+  `snapplan_guest_id` cookie.
 
 ---
 
@@ -256,6 +275,7 @@ falls back to the mock rather than failing at call time.
 | 2 | Host receives separate guest and management links | ✅ Base44 + Sites |
 | 3 | Multiple guests on different browsers submit availability + price | ✅ Base44 + Sites |
 | 4 | Same browser can't create duplicate attendees | ✅ Base44 + Sites |
+| 4a | Named friend link can't create duplicate attendees across browsers | ✅ Sites backend; Base44 wiring pending |
 | 5 | Host sees a clear consensus summary | ✅ Base44 + Sites |
 | 6 | Recognizable spatial-art experience with dependable fallback | ✅ Planetoid fallback; World Labs integration ready |
 | 7 | Ready-to-plan state with booking/seating/requirements actions | ✅ Honest pending/dry-run UI |
@@ -284,6 +304,10 @@ is already live and verified.
   dropped to eye height is walking through it — a camera animation, not a
   second generation. Costs `three` + `@sparkjsdev/spark` and a render loop.
   See `docs/world-labs-setup.md`.
+
+### Next integration step
+- Publish the invitation-enabled Sites version, then update Base44's create
+  success screen and guest adapter to preserve the `invite` query parameter.
 - **Git identity.** Commits so far used a local `user.email` on the
   worktrees because the repo had none configured. Reconcile before judging if
   commit attribution matters.
@@ -355,6 +379,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | coordination spine | Added persistent named friend invitations, host-only link creation/recovery, invitation-owned cross-device RSVP identity, and a query-preserving temporary RSVP harness. Unified links remain supported. |
 | 2026-08-22 | merge | Combined origin/main Sites+Base44 live spine with local World Labs multimodal/render-assets work. |
 | 2026-08-22 | integrations | World Labs: rewrote the prompt mapper to emit renderable spatial language (was abstract mood words Marble can't use); added a deterministic planet render for the load-in/no-key state; added image and multi-image generation modes with `marble-1.1-plus` for expansive scenes; exposed splat URLs, collider mesh, pano, scale and ground-plane offset on `WorldResult` so the app can render with SparkJS. 117 tests green. |
 | 2026-08-22 | coordination spine | Merged Sites app with integrations track. Added Twilio env placeholders, dry-run `POST /api/manage/{token}/book`, and HMAC `POST /api/webhooks/elevenlabs`. Corrected §0: Sites harness is deployed. |

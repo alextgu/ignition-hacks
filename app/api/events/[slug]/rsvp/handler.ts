@@ -1,10 +1,15 @@
 import type {
   AttendeeRecord,
   EventRecord,
+  InvitationRecord,
 } from "../../../../../src/features/events/contracts";
 import { resolveGuestIdentity } from "../../../../../src/features/guests/identity";
 
 type GuestResponseService = {
+  resolveInvitation(
+    slug: string,
+    token: string,
+  ): Promise<InvitationRecord | null>;
   getGuestResponse(
     slug: string,
     guestId: string,
@@ -18,6 +23,32 @@ type GuestResponseService = {
     | { ok: false; error: string }
   >;
 };
+
+const invitationTokenPattern = /^[a-zA-Z0-9_-]{16,128}$/;
+
+async function resolveRequestIdentity(
+  request: Request,
+  slug: string,
+  service: GuestResponseService,
+  createGuestId?: () => string,
+) {
+  const url = new URL(request.url);
+  if (url.searchParams.has("invite")) {
+    const token = url.searchParams.get("invite") ?? "";
+    if (!invitationTokenPattern.test(token)) return null;
+    const invitation = await service.resolveInvitation(slug, token);
+    if (!invitation) return null;
+    return {
+      guestId: `invite_${invitation.id}`,
+      setCookie: null,
+      suggestedName: invitation.suggestedName,
+    };
+  }
+  return {
+    ...resolveGuestIdentity(request, createGuestId),
+    suggestedName: null,
+  };
+}
 
 function jsonWithIdentity(
   value: unknown,
@@ -35,7 +66,18 @@ export function createRsvpHandlers(
 ) {
   return {
     async get(request: Request, slug: string) {
-      const identity = resolveGuestIdentity(request, createGuestId);
+      const identity = await resolveRequestIdentity(
+        request,
+        slug,
+        service,
+        createGuestId,
+      );
+      if (!identity) {
+        return Response.json(
+          { error: "Invitation not found." },
+          { status: 404 },
+        );
+      }
       const result = await service.getGuestResponse(slug, identity.guestId);
       if (!result) {
         return jsonWithIdentity(
@@ -47,14 +89,29 @@ export function createRsvpHandlers(
       const { managementToken, ...publicEvent } = result.event;
       void managementToken;
       return jsonWithIdentity(
-        { event: publicEvent, attendee: result.attendee },
+        {
+          event: publicEvent,
+          attendee: result.attendee,
+          suggestedName: identity.suggestedName,
+        },
         200,
         identity.setCookie,
       );
     },
 
     async put(request: Request, slug: string) {
-      const identity = resolveGuestIdentity(request, createGuestId);
+      const identity = await resolveRequestIdentity(
+        request,
+        slug,
+        service,
+        createGuestId,
+      );
+      if (!identity) {
+        return Response.json(
+          { error: "Invitation not found." },
+          { status: 404 },
+        );
+      }
       let input: unknown;
       try {
         input = await request.json();

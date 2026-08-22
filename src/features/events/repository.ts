@@ -1,9 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { ensureDatabase, getDb } from "../../../db";
-import { attendees, events } from "../../../db/schema";
+import { attendees, events, invitations } from "../../../db/schema";
 import type {
   AttendeeRecord,
   EventRecord,
+  InvitationRecord,
   PriceResponse,
 } from "./contracts";
 
@@ -14,10 +15,19 @@ export type EventsRepository = {
   findAttendee(eventId: string, guestId: string): Promise<AttendeeRecord | null>;
   listAttendees(eventId: string): Promise<AttendeeRecord[]>;
   upsertAttendee(attendee: AttendeeRecord): Promise<AttendeeRecord>;
+  insertInvitations(
+    records: InvitationRecord[],
+  ): Promise<InvitationRecord[]>;
+  findInvitation(
+    eventId: string,
+    token: string,
+  ): Promise<InvitationRecord | null>;
+  listInvitations(eventId: string): Promise<InvitationRecord[]>;
 };
 
 type EventRow = typeof events.$inferSelect;
 type AttendeeRow = typeof attendees.$inferSelect;
+type InvitationRow = typeof invitations.$inferSelect;
 
 function toEventRecord(row: EventRow): EventRecord {
   return {
@@ -51,6 +61,16 @@ function toAttendeeRecord(row: AttendeeRow): AttendeeRecord {
     avatarIndex: row.avatarIndex,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+  };
+}
+
+function toInvitationRecord(row: InvitationRow): InvitationRecord {
+  return {
+    id: row.id,
+    eventId: row.eventId,
+    token: row.token,
+    suggestedName: row.suggestedName,
+    createdAt: row.createdAt,
   };
 }
 
@@ -153,6 +173,37 @@ export function createD1EventsRepository(
       const saved = await this.findAttendee(attendee.eventId, attendee.guestId);
       if (!saved) throw new Error("Attendee upsert did not return a record.");
       return saved;
+    },
+
+    async insertInvitations(records) {
+      await ensureReady();
+      if (records.length === 0) return [];
+      await database.insert(invitations).values(records);
+      return records;
+    },
+
+    async findInvitation(eventId, token) {
+      await ensureReady();
+      const [row] = await database
+        .select()
+        .from(invitations)
+        .where(
+          and(
+            eq(invitations.eventId, eventId),
+            eq(invitations.token, token),
+          ),
+        )
+        .limit(1);
+      return row ? toInvitationRecord(row) : null;
+    },
+
+    async listInvitations(eventId) {
+      await ensureReady();
+      const rows = await database
+        .select()
+        .from(invitations)
+        .where(eq(invitations.eventId, eventId));
+      return rows.map(toInvitationRecord);
     },
   };
 }

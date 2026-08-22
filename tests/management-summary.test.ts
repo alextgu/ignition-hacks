@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createManageHandler } from "../app/api/manage/[token]/handler.ts";
+import * as manageHandlers from "../app/api/manage/[token]/handler.ts";
 import { summarizeResponses } from "../src/features/events/summary.ts";
 
 const event = {
@@ -93,4 +94,98 @@ test("returns not found for an unknown management token", async () => {
   );
   assert.equal(response.status, 404);
   assert.deepEqual(await response.json(), { error: "Event not found." });
+});
+
+test("returns recoverable named guest links to the host", async () => {
+  const handle = createManageHandler({
+    async getManagedEvent() {
+      return {
+        event,
+        attendees: [],
+        invitations: [
+          {
+            id: "invitation-1",
+            eventId: event.id,
+            token: "invite-secret-1234",
+            suggestedName: "Alex",
+            createdAt: event.createdAt,
+          },
+        ],
+      };
+    },
+  });
+  const response = await handle(
+    new Request("https://snapplan.test/api/manage/manage-secret"),
+    "manage-secret",
+  );
+  const body = await response.json();
+
+  assert.deepEqual(body.invitations, [
+    {
+      suggestedName: "Alex",
+      guestUrl:
+        "https://snapplan.test/e/demo-event?invite=invite-secret-1234",
+    },
+  ]);
+  assert.equal(JSON.stringify(body.invitations).includes("manage-secret"), false);
+});
+
+test("creates named guest links through the private management route", async () => {
+  const createInvitationsHandler = (
+    manageHandlers as typeof manageHandlers & {
+      createInvitationsHandler: (service: {
+        createInvitations(token: string, input: unknown): Promise<{
+          ok: true;
+          event: typeof event;
+          invitations: Array<{
+            id: string;
+            eventId: string;
+            token: string;
+            suggestedName: string;
+            createdAt: string;
+          }>;
+        }>;
+      }) => (request: Request, token: string) => Promise<Response>;
+    }
+  ).createInvitationsHandler;
+  assert.equal(typeof createInvitationsHandler, "function");
+
+  const handle = createInvitationsHandler({
+    async createInvitations(token, input) {
+      assert.equal(token, "manage-secret");
+      assert.deepEqual(input, { names: ["Alex", "Sam"] });
+      return {
+        ok: true as const,
+        event,
+        invitations: ["Alex", "Sam"].map((suggestedName, index) => ({
+          id: `invitation-${index + 1}`,
+          eventId: event.id,
+          token: `invite-secret-${index + 1}`,
+          suggestedName,
+          createdAt: event.createdAt,
+        })),
+      };
+    },
+  });
+  const response = await handle(
+    new Request("https://snapplan.test/api/manage/manage-secret/invitations", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ names: ["Alex", "Sam"] }),
+    }),
+    "manage-secret",
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 201);
+  assert.deepEqual(body.invitations, [
+    {
+      suggestedName: "Alex",
+      guestUrl: "https://snapplan.test/e/demo-event?invite=invite-secret-1",
+    },
+    {
+      suggestedName: "Sam",
+      guestUrl: "https://snapplan.test/e/demo-event?invite=invite-secret-2",
+    },
+  ]);
 });

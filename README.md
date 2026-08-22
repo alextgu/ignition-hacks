@@ -10,6 +10,7 @@ This repository currently provides:
 - Host event creation
 - Separate public guest and private management URLs
 - One editable RSVP per anonymous browser identity
+- Optional named invitation links with one stable RSVP identity per link
 - Availability and price-comfort summaries
 - Temporary functional pages for testing the flow
 
@@ -76,11 +77,31 @@ The response includes the event, public `guestUrl`, and secret `manageUrl`.
 
 `priceResponse` is `works`, `flexible`, or `too_much`. The browser receives an HTTP-only `snapplan_guest_id` cookie. Repeated PUT requests update the same attendee record.
 
+Named links use the same endpoints with `?invite={invitationToken}`. The token
+maps to one event-owned attendee identity across browsers, pre-fills the
+suggested friend name, and updates the same response on repeat submissions.
+
+### Create named guest links
+
+`POST /api/manage/{managementToken}/invitations`
+
+```json
+{
+  "names": ["Alex", "Sam"]
+}
+```
+
+The response contains one shareable `guestUrl` per name. The private
+management token is never included in those guest links. The unified guest URL
+continues to work alongside named links.
+
 ### Read private host state
 
 `GET /api/manage/{managementToken}`
 
-The response contains the public event fields, attendees, guest URL, availability totals, and price-comfort totals. It does not echo the management token.
+The response contains the public event fields, attendees, unified guest URL,
+recoverable named invitation links, availability totals, and price-comfort
+totals. It does not echo the management token.
 
 ### Booking call wireframe (dry run by default)
 

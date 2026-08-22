@@ -41,3 +41,13 @@ export const attendees = sqliteTable(
     ),
   ],
 );
+
+export const invitations = sqliteTable("invitations", {
+  id: text("id").primaryKey(),
+  eventId: text("event_id")
+    .notNull()
+    .references(() => events.id, { onDelete: "cascade" }),
+  token: text("invitation_token").notNull().unique(),
+  suggestedName: text("suggested_name").notNull(),
+  createdAt: text("created_at").notNull(),
+});

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { buildRsvpRequestPath } from "../../../src/features/guests/identity";
 
 type Attendee = {
   displayName: string;
@@ -11,25 +12,29 @@ type Attendee = {
 export function RsvpForm({
   slug,
   timeOptions,
+  invitationToken,
 }: {
   slug: string;
   timeOptions: string[];
+  invitationToken?: string;
 }) {
   const [attendee, setAttendee] = useState<Attendee | null>(null);
+  const [suggestedName, setSuggestedName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`/api/events/${slug}/rsvp`)
+    fetch(buildRsvpRequestPath(slug, invitationToken))
       .then(async (response) => {
         const result = await response.json();
         if (!response.ok) throw new Error(result.error);
         setAttendee(result.attendee);
+        setSuggestedName(result.suggestedName ?? "");
       })
       .catch(() => setError("Unable to load your response."))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [invitationToken, slug]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,7 +42,7 @@ export function RsvpForm({
     setError("");
     const data = new FormData(event.currentTarget);
     try {
-      const response = await fetch(`/api/events/${slug}/rsvp`, {
+      const response = await fetch(buildRsvpRequestPath(slug, invitationToken), {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -63,7 +68,12 @@ export function RsvpForm({
       <h2>{attendee ? "Your response" : "Can you make it?"}</h2>
       <label className="field">
         <span>Name</span>
-        <input name="displayName" defaultValue={attendee?.displayName} maxLength={60} required />
+        <input
+          name="displayName"
+          defaultValue={attendee?.displayName ?? suggestedName}
+          maxLength={60}
+          required
+        />
       </label>
       <fieldset>
         <legend>Times that work</legend>

@@ -128,3 +128,66 @@ test("returns public event details without exposing the management token", async
   assert.equal(body.event.managementToken, undefined);
   assert.equal(body.attendee, null);
 });
+
+test("uses a named invitation as the stable RSVP identity", async () => {
+  const guestIds: string[] = [];
+  const handlers = createRsvpHandlers(
+    {
+      async resolveInvitation(_slug, token) {
+        assert.equal(token, "invite-secret-1234");
+        return {
+          id: "invitation-1",
+          eventId: event.id,
+          token,
+          suggestedName: "Alex",
+          createdAt: event.createdAt,
+        };
+      },
+      async getGuestResponse(_slug, guestId) {
+        guestIds.push(guestId);
+        return { event, attendee: null };
+      },
+      async upsertGuestResponse(_slug, guestId, input) {
+        guestIds.push(guestId);
+        return {
+          ok: true as const,
+          attendee: {
+            id: "attendee-1",
+            eventId: event.id,
+            guestId,
+            displayName: (input as { displayName: string }).displayName,
+            selectedTimeOptions: event.timeOptions,
+            priceResponse: "works" as const,
+            avatarIndex: 0,
+            createdAt: event.createdAt,
+            updatedAt: event.updatedAt,
+          },
+        };
+      },
+    },
+    () => "browser-guest",
+  );
+  const url =
+    "https://snapplan.test/api/events/demo-event/rsvp?invite=invite-secret-1234";
+
+  const getResponse = await handlers.get(new Request(url), "demo-event");
+  assert.equal(getResponse.status, 200);
+  const getBody = await getResponse.json();
+  assert.equal(getBody.suggestedName, "Alex");
+  assert.equal(getResponse.headers.get("set-cookie"), null);
+
+  const putResponse = await handlers.put(
+    new Request(url, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        displayName: "Alex T.",
+        selectedTimeOptions: event.timeOptions,
+        priceResponse: "works",
+      }),
+    }),
+    "demo-event",
+  );
+  assert.equal(putResponse.status, 200);
+  assert.deepEqual(guestIds, ["invite_invitation-1", "invite_invitation-1"]);
+});

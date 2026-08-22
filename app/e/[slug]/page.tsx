@@ -5,7 +5,10 @@ import { createD1EventsRepository } from "../../../src/features/events/repositor
 import { createEventService } from "../../../src/features/events/service";
 import { RsvpForm } from "./rsvp-form";
 
-type EventPageProps = { params: Promise<{ slug: string }> };
+type EventPageProps = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ invite?: string | string[] }>;
+};
 
 function getService() {
   return createEventService(createD1EventsRepository());
@@ -29,8 +32,11 @@ export async function generateMetadata({
   };
 }
 
-export default async function EventPage({ params }: EventPageProps) {
+export default async function EventPage({ params, searchParams }: EventPageProps) {
   const { slug } = await params;
+  const query = await searchParams;
+  const invitationToken =
+    typeof query.invite === "string" ? query.invite : undefined;
   const event = await getService().getEventBySlug(slug);
   if (!event) notFound();
 
@@ -45,7 +51,11 @@ export default async function EventPage({ params }: EventPageProps) {
         <div><dt>Estimate</dt><dd>${event.priceMin}–${event.priceMax} / person</dd></div>
         <div><dt>Group</dt><dd>About {event.groupSize} people</dd></div>
       </dl>
-      <RsvpForm slug={slug} timeOptions={event.timeOptions} />
+      <RsvpForm
+        slug={slug}
+        timeOptions={event.timeOptions}
+        invitationToken={invitationToken}
+      />
     </main>
   );
 }
