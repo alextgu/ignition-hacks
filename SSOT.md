@@ -145,7 +145,7 @@ Secrets live only in local `.env` and hosted runtime configuration.
 - ElevenLabs agent ID: created, configured, and saved locally.
 - ElevenLabs caller phone-number ID: none are connected to the account.
 - ElevenLabs webhook secret: not created yet.
-- Test destination number: missing from local `.env`.
+- Test destination number: present locally in E.164 format; not committed.
 - World Labs key: present locally under `WORLD_LABS_KEY`; the World Labs
   adapter must normalize this noncanonical alias or migrate it to
   `WLT_API_KEY`.
@@ -164,7 +164,6 @@ Secrets live only in local `.env` and hosted runtime configuration.
 
 ## Current Blockers and Risks
 
-- `ELEVENLABS_TEST_TO_NUMBER` is not present locally.
 - The ElevenLabs account currently has zero connected caller numbers.
 - The final Base44 origin is not known, so the production CORS allowlist cannot
   be finalized.
@@ -203,5 +202,6 @@ Secrets live only in local `.env` and hosted runtime configuration.
 - Identified the shortest remaining path to the hackathon demo.
 - Reverified the coordination baseline and recorded the required Node runtime.
 - Created and configured the ElevenLabs venue-booking agent.
-- Confirmed that no caller number is connected and no test destination is set.
+- Confirmed that no caller number is connected.
+- Saved the user-provided test destination locally without recording it here.
 - Corrected the local World Labs key status and recorded its env-name mismatch.
