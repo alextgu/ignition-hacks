@@ -206,25 +206,32 @@ export function conversationToBookingResult(
 /**
  * Decides the booking outcome.
  *
- * Precedence: an explicit `booking_confirmed` data-collection field wins,
- * because it is the agent's own structured answer. Otherwise fall back to
- * `call_successful`. A completed call is NEVER reported as "booked" without
- * positive evidence — project.md requires that booking actions never appear
- * successful until an external path actually confirms.
+ * **Only an explicit `booking_confirmed` data-collection field can produce
+ * "booked".** Nothing else is evidence of a reservation.
+ *
+ * `call_successful` is deliberately NOT treated as confirmation. In
+ * ElevenLabs it means the *call* went well — the agent connected, spoke, and
+ * completed its task cleanly. A call where the venue says "we're completely
+ * booked Friday" is a perfectly successful call, and mapping that to "booked"
+ * reported a reservation that does not exist. It is used here only in the
+ * negative direction: an outright call failure is a "declined".
+ *
+ * The cost of this is that an agent without a `booking_confirmed` field
+ * configured can never report "booked" — it reports "needs_followup", which
+ * is the honest answer, because in that configuration the system genuinely
+ * does not know. See `docs/elevenlabs-setup.md` for the field to add.
+ *
+ * project.md: booking actions must never appear successful until an external
+ * path actually confirms.
  */
 function deriveOutcome(analysis: ElevenLabsAnalysis | undefined): BookingOutcome {
   const confirmed = readBooleanDataPoint(analysis, "booking_confirmed");
   if (confirmed === true) return "booked";
   if (confirmed === false) return "declined";
 
-  switch (analysis?.call_successful) {
-    case "success":
-      return "booked";
-    case "failure":
-      return "declined";
-    default:
-      return "needs_followup";
-  }
+  // No structured answer from the agent: the call outcome alone cannot tell
+  // us whether a table was held, so a human has to look.
+  return analysis?.call_successful === "failure" ? "declined" : "needs_followup";
 }
 
 function mapTranscript(conversation: ElevenLabsConversation): TranscriptLine[] {

@@ -60,3 +60,19 @@ test("canonical WORLDLABS_API_KEY wins over the aliases", () => {
   });
   assert.equal(config.apiKey, "canonical");
 });
+
+test("WORLD_LABS_KEY alone is enough to use the real adapter", () => {
+  // The name the team's .env actually uses. Omitting it meant a filled-in
+  // key silently fell through to the deterministic mock.
+  const config = loadConfig({ WORLD_LABS_KEY: "wlt-from-dotenv" });
+  assert.equal(config.apiKey, "wlt-from-dotenv");
+  assert.equal(shouldUseRealAdapter(config), true);
+});
+
+test("the canonical names still win over WORLD_LABS_KEY", () => {
+  const config = loadConfig({
+    WORLD_LABS_KEY: "legacy",
+    WORLDLABS_API_KEY: "canonical",
+  });
+  assert.equal(config.apiKey, "canonical");
+});

@@ -386,3 +386,30 @@ test("the API key never appears in an error message", async () => {
     }
   );
 });
+
+test("a successful call where the venue said no is never reported as booked", async () => {
+  // The exact shape that misreported a reservation: the call completed
+  // cleanly (call_successful: "success") but the venue had no table, and the
+  // agent has no booking_confirmed field configured to say so.
+  await withMockFetch(
+    async () =>
+      jsonResponse({
+        conversation_id: "conv_1",
+        status: "done",
+        transcript: [
+          { role: "agent", message: "A table for six on Friday at seven?", time_in_call_secs: 3 },
+          { role: "user", message: "We're completely booked Friday, sorry.", time_in_call_secs: 10 },
+        ],
+        analysis: {
+          call_successful: "success",
+          transcript_summary: "Venue is fully booked Friday.",
+        },
+      }),
+    async () => {
+      const adapter = new RealBookingAgentAdapter(config);
+      const result = await adapter.getBookingCallStatus("conv_1");
+      assert.equal(result.outcome, "needs_followup");
+      assert.notEqual(result.outcome, "booked");
+    }
+  );
+});

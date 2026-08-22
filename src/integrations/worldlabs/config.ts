@@ -56,7 +56,15 @@ export function loadConfig(env: EnvLike = readEnv()): WorldLabsConfig {
     // Aliases: the team's .env.example uses WLT_API_KEY (matching the
     // WLT-Api-Key header) and WORLD_LABS_API_KEY. Accept all three so a
     // correctly-filled .env never silently falls through to the mock.
-    apiKey: firstSet(env, ["WORLDLABS_API_KEY", "WLT_API_KEY", "WORLD_LABS_API_KEY"]),
+    // WORLD_LABS_KEY is the name actually used in the team's .env and in the
+    // embed design doc; leaving it out meant a correctly-filled .env fell
+    // silently through to the mock.
+    apiKey: firstSet(env, [
+      "WORLDLABS_API_KEY",
+      "WLT_API_KEY",
+      "WORLD_LABS_API_KEY",
+      "WORLD_LABS_KEY",
+    ]),
     baseUrl: env.WORLDLABS_BASE_URL?.trim() || DEFAULT_BASE_URL,
     model: env.WORLDLABS_MODEL?.trim() || DEFAULT_MODEL,
     timeoutMs: parsePositiveInt(env.WORLDLABS_TIMEOUT_MS, DEFAULT_TIMEOUT_MS),
