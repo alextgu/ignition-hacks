@@ -120,3 +120,109 @@ Link to the pass from the host dashboard and the guest page once the event is
 If the event is not `booked`, the pass page shows a friendly "This event
 isn't confirmed yet" state with a link back to the event — never a broken or
 half-empty pass.
+
+
+## Design system — use these exact values
+
+The visual direction is **"warm paper, dark line"**: the app is light, warm
+and editorial; only the live call panel and the pass backdrop go dark. Do not
+build a system-wide dark mode.
+
+The demo is a **recorded video embedded on a website**, so video compression
+is the binding constraint. That drives a few hard rules:
+
+- The dark panel is **flat `#0C0A09`, never a gradient** — gradients band
+  badly under H.264/VP9.
+- **No film grain, noise textures, or glassmorphism blur** over busy content.
+- **Borders are 1.5px minimum.** 1px hairlines vanish or shimmer after
+  compression.
+- **Body text is 17px and nothing goes below 14px anywhere** — a 1440px
+  capture embedded at ~800px is scaled to about 55%.
+- **Motion is slow and short**: 180ms ease-out for hovers, 240ms for
+  entrances, fades and 8px slides only. No springs, no bounces, no continuous
+  animation except one slow drift on the world scene. Respect
+  `prefers-reduced-motion`.
+
+### Light tokens — app chrome, the default everywhere
+
+```
+--bg #FAF8F5   --bg-raised #FFFFFF   --bg-sunken #F2EEE8
+--text #1A1714   --text-secondary #5C544B   --text-tertiary #8A8177
+--border #E8E2DA   --border-strong #D6CEC2
+--accent #C2410C   --accent-hover #9A3412   --accent-bg #FEF1E8
+--success #15803D   --warning #B45309   --danger #B91C1C
+--shadow: 0 1px 2px rgba(26,23,20,.04), 0 4px 12px rgba(26,23,20,.06)
+--shadow-lifted: 0 2px 4px rgba(26,23,20,.05), 0 12px 32px rgba(26,23,20,.10)
+```
+
+### Dark tokens — the call panel and pass backdrop ONLY
+
+```
+--d-bg #0C0A09 (flat)   --d-surface #1C1917   --d-border #2E2A27
+--d-text #FAFAF9   --d-text-secondary #A8A29E
+--d-accent #FB923C   --d-success #4ADE80   --d-warning #FBBF24   --d-danger #F87171
+```
+
+One accent, one success, one warning. Do not add more colours.
+
+### Type
+
+```
+Display   Fraunces, Georgia, serif       — event titles, hero, the pass only
+UI        Inter, system-ui, sans-serif   — everything else
+Mono      "JetBrains Mono", ui-monospace — timestamps, references, IDs
+```
+
+Hero 44/1.1 (32 mobile) · Page title 32/1.2 · Section 24/1.3 · Card title
+19/1.4 · **Body 17/1.6** · Small 15/1.5 · Label 14 uppercase .06em tracking ·
+Mono 14. Weights 400 body, 600 headings and labels.
+
+The serif display against the sans UI is what makes this read editorial
+instead of like a dashboard template. Use Fraunces for titles and the pass
+only — never body copy or labels.
+
+### Space and shape
+
+Spacing scale `4 8 12 16 24 32 48 64 96` — be generous, whitespace is most
+of the "clean". Radius `10px` panels and cards, `6px` inputs, `999px` pills.
+Reading columns max 680px, dashboard max 1080px. Tap targets at least 44px
+tall. Support light appearance only — no theme toggle.
+
+### Anti-patterns
+
+No purple/blue gradients, no glassmorphism over busy content, no neon, no
+pure `#000` or `#FFF`, no second accent colour, no emoji as UI iconography,
+no dark mode toggle, no text drop shadows, no centred long body copy, no
+hairline borders on structural elements.
+
+### Component specs for this prompt
+
+**The call panel.** Full-bleed `--d-bg`, square corners on mobile, `10px` on
+desktop.
+- Status pill top-left: `--d-accent` dot with a slow 2s pulse while live,
+  then `ON THE CALL - 0:14`, elapsed time in mono.
+- Timeline newest-at-bottom, auto-scrolling. Fixed-width left gutter holds
+  `+00:07` in `--d-text-secondary` mono so the column stays aligned.
+- Agent lines: `--d-text`, left aligned, small `--d-accent` triangle prefix,
+  a `SNAPPLAN AGENT` label on the first one only.
+- Venue lines: `--d-text-secondary`, indented 24px, venue name as the label
+  on the first one only.
+- Counter-offers: own block, `--d-surface` fill, `1.5px --d-warning` left
+  edge, `COUNTER-OFFER` label in mono, then the plain-language summary.
+- Terminal state: solid full-width bar, `--d-success` secured /
+  `--d-danger` failed / `--d-warning` needs attention, outcome at 19px/600.
+- New lines fade in and slide up 8px over 240ms. Nothing else moves.
+
+Remember the transcript is doing double duty as **captions** — most people
+watch embedded video muted, so the call has to be fully legible with no
+sound. Its readability is the highest-priority thing on the page.
+
+**The pass.** World scene full-bleed behind a `#0C0A09` scrim at 55%. Over
+it a `--bg` card at `10px` radius with `--shadow-lifted`: event title in
+Fraunces 32px, then the confirmed date and time as the single largest element
+on screen, then party size, reservation name, dietary tags as pills, guest
+avatars in a row, confirmation reference in mono. Built to be screenshotted.
+
+**Avatars.** Deterministic from `avatar_seed`: flat circle from a fixed
+six-colour set drawn from the palette, initials in white at weight 600. No
+photos, no gradients, no external image services.

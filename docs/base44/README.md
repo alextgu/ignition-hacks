@@ -122,6 +122,13 @@ between each. One mega-prompt produces mush; staged prompts produce an app.
 | 3 | `prompt-3-telemetry-and-pass.md` | Live call telemetry stream, web pass, `.ics` download |
 | 4 | `prompt-4-landing-site.md` | Separate marketing/demo site |
 
+`design-system.md` is the visual source of truth — **"warm paper, dark
+line"**: light warm editorial chrome, with only the live call panel and the
+pass backdrop going dark. Its tokens are already inlined into prompts 1, 3
+and 4, so you don't need to paste it separately. Read it if you want the
+reasoning, particularly the video-compression rules, since the demo is a
+recorded video embedded on the site.
+
 After prompt 1, add your secrets in Base44's project settings before running
 prompt 2. Names are in prompt 2's env table.
 

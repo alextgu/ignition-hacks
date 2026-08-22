@@ -271,3 +271,8 @@ agent correctly declines to commit.
   "Retry" affordance on the failure states.
 - Label the button "Call venue" when credentials are configured and "Simulate
   call" when they aren't, but the flow itself must be identical.
+
+Keep the existing visual language: warm paper chrome (`--bg #FAF8F5`,
+`--text #1A1714`, `--accent #C2410C`), 17px body, 1.5px borders. The live
+call UI gets its full dark treatment in the next prompt — for now a plain
+light card showing the current status honestly is enough.
