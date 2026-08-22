@@ -486,6 +486,35 @@ input:focus, textarea:focus, .money-input:focus-within {
   .world-frame { aspect-ratio: 4 / 3; }
 }
 
+/* Attach an ElevenLabs conversation that began outside the app — a browser
+   test of the agent, or a call placed from the vendor dashboard. */
+.attach-call {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.9rem 0 0.2rem;
+}
+
+.attach-call label {
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.attach-call-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.attach-call-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.85rem;
+}
+
+.attach-call-row button {
+  flex: 0 0 auto;
 /* ---------------------------------------------------------------------------
    View demo pipeline (see app/pipeline/pipeline-slideshow.tsx).
    Sits under the create form and is also served standalone at /pipeline so

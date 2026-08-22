@@ -224,7 +224,7 @@ export function conversationToBookingResult(
  * project.md: booking actions must never appear successful until an external
  * path actually confirms.
  */
-function deriveOutcome(analysis: ElevenLabsAnalysis | undefined): BookingOutcome {
+export function deriveOutcome(analysis: ElevenLabsAnalysis | undefined): BookingOutcome {
   const confirmed = readBooleanDataPoint(analysis, "booking_confirmed");
   if (confirmed === true) return "booked";
   if (confirmed === false) return "declined";

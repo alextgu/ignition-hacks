@@ -41,6 +41,7 @@ export function ManageDashboard({
   const [bookingError, setBookingError] = useState("");
   const [call, setCall] = useState<BookingCall | null>(null);
   const [statusUrl, setStatusUrl] = useState<string | null>(null);
+  const [attachId, setAttachId] = useState("");
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -109,6 +110,26 @@ export function ManageDashboard({
         setBookingNote("");
       }
     });
+  };
+
+  /**
+   * Watch a conversation this dashboard did not start.
+   *
+   * A booking conversation can begin outside the app — a browser test of the
+   * agent, or a call placed from the ElevenLabs dashboard. Those produce a
+   * conversation id like any other, and the status endpoint reads them the
+   * same way, so pasting one here brings the transcript and outcome into the
+   * host's view instead of stranding it in a vendor console.
+   */
+  const attachCall = () => {
+    const id = attachId.trim();
+    if (!id) return;
+    setBookingError("");
+    setCall(null);
+    setBookingNote("Attaching conversation…");
+    setStatusUrl(
+      `/api/manage/${token}/book/status?callId=${encodeURIComponent(id)}`,
+    );
   };
 
   return (
@@ -181,6 +202,25 @@ export function ManageDashboard({
           <button type="button" disabled>
             Add requirements
           </button>
+        </div>
+        <div className="attach-call">
+          <label htmlFor="attach-call-id">
+            Or watch a conversation started elsewhere
+          </label>
+          <div className="attach-call-row">
+            <input
+              id="attach-call-id"
+              type="text"
+              value={attachId}
+              onChange={(changeEvent) => setAttachId(changeEvent.target.value)}
+              placeholder="ElevenLabs conversation id"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <button type="button" onClick={attachCall} disabled={!attachId.trim()}>
+              Watch
+            </button>
+          </div>
         </div>
         {bookingNote ? <p role="status">{bookingNote}</p> : null}
         {bookingError ? (
