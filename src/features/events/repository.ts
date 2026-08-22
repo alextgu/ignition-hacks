@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { getDb } from "../../../db";
+import { ensureDatabase, getDb } from "../../../db";
 import { attendees, events } from "../../../db/schema";
 import type {
   AttendeeRecord,
@@ -56,9 +56,11 @@ function toAttendeeRecord(row: AttendeeRow): AttendeeRecord {
 
 export function createD1EventsRepository(
   database: ReturnType<typeof getDb> = getDb(),
+  ensureReady: () => Promise<void> = ensureDatabase,
 ): EventsRepository {
   return {
     async insertEvent(event) {
+      await ensureReady();
       await database.insert(events).values({
         id: event.id,
         publicSlug: event.publicSlug,
@@ -80,6 +82,7 @@ export function createD1EventsRepository(
     },
 
     async findEventBySlug(slug) {
+      await ensureReady();
       const [row] = await database
         .select()
         .from(events)
@@ -89,6 +92,7 @@ export function createD1EventsRepository(
     },
 
     async findEventByManagementToken(token) {
+      await ensureReady();
       const [row] = await database
         .select()
         .from(events)
@@ -98,6 +102,7 @@ export function createD1EventsRepository(
     },
 
     async findAttendee(eventId, guestId) {
+      await ensureReady();
       const [row] = await database
         .select()
         .from(attendees)
@@ -112,6 +117,7 @@ export function createD1EventsRepository(
     },
 
     async listAttendees(eventId) {
+      await ensureReady();
       const rows = await database
         .select()
         .from(attendees)
@@ -120,6 +126,7 @@ export function createD1EventsRepository(
     },
 
     async upsertAttendee(attendee) {
+      await ensureReady();
       const values = {
         id: attendee.id,
         eventId: attendee.eventId,

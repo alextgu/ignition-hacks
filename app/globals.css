@@ -219,6 +219,24 @@ input:focus, textarea:focus, .money-input:focus-within {
   font-size: 0.78rem;
 }
 
+.form-error {
+  color: #9c3024;
+  font-size: 0.85rem;
+}
+
+.created-links {
+  display: grid;
+  gap: 1rem;
+  margin-top: 2.4rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+
+.created-links h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
 .world-card {
   position: sticky;
   top: 2rem;
