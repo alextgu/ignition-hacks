@@ -5,8 +5,8 @@ work — see `AGENTS.md` Rule 0.**
 
 - Product spec: `project.md` (stable, don't edit)
 - Agent rules: `AGENTS.md`
-- Last updated: **2026-08-22** — World Labs wired into the app (generation on
-  create, D1 persistence, public world API, embeddable `/world/{slug}` canvas)
+- Last updated: **2026-08-22** — World Labs app wiring published in Sites
+  version 5; Base44 iframe handoff verified in editor preview
 
 ---
 
@@ -42,7 +42,7 @@ contracts.
 | Unified + named friend links | coordination spine | **Backend deployed; Base44 preview verified** — public UI publish pending | 2026-08-22 |
 | Twilio/ElevenLabs live call path | coordination spine | **Done** — dry-run + live/mock dispatch + status poll | 2026-08-22 |
 | World Labs integration | integrations agent | **Done** — text/image/multi-image, render assets exposed | 2026-08-22 |
-| World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Done** — live path verified against a stubbed Marble API | 2026-08-22 |
+| World Labs wired into app (generate + persist + API + canvas) | coordination spine | **Deployed** — Base44 preview iframe handoff verified; real Marble still needs a hosted key | 2026-08-22 |
 | ElevenLabs booking agent | integrations agent | **Done** — real + mock | 2026-08-22 |
 | Finished Base44 UI | Base44 / Simon | **Done** — published with live API adapter | 2026-08-22 |
 | In-app world viewer (SparkJS, base + walk cameras) | unassigned | **Not started** — dependency-free panorama canvas ships instead; splat URLs already served | 2026-08-22 |
@@ -91,10 +91,11 @@ transaction verified this complete path:
   summary without echoing the token.
 - The published Base44 origin received the configured CORS response headers.
 
-This audit covers the currently live coordination slice. It intentionally does
-not claim that sponsor integrations are routed yet: `/api/manage/{token}/book`
-is still a dry-run/readiness wireframe, the ElevenLabs webhook verifies but does
-not persist outcomes, and World Labs generation is not invoked by an app route.
+This original audit covered the coordination slice. Sites version 5 now also
+routes event creation through the World Labs boundary and exposes the
+event-specific `/world/{slug}` canvas. The booking route dispatches live/mock
+calls and polls status, but the ElevenLabs webhook still does not persist
+outcomes and a real call still needs an imported phone-number ID.
 
 ### Named invitation contract (implemented and deployed)
 
@@ -356,9 +357,10 @@ is already live and verified.
 - Event lock-in + durable booking attempts are still missing on the spine.
 
 ### Needs a decision
-- **World Labs iframe embedding is unverified.** The docs don't document an
-  official iframe-embed contract (CORS / `X-Frame-Options`) for
-  `world_marble_url`. Test it early; plan for a new-tab fallback.
+- **Resolved for the app-owned canvas:** Base44 editor preview embeds the Sites
+  `/world/{slug}` route successfully on create success, guest, and host Planet
+  views, with an `Open world` fallback link. This does not claim the external
+  World Labs viewer URL itself is frameable.
 - **The in-app viewer is the big open build.** `WorldResult.assets` now
   carries everything SparkJS needs (splats, collider, scale, ground plane).
   One scene serves both cameras: high and angled down is the base view,
@@ -368,7 +370,7 @@ is already live and verified.
 
 ### Next integration step
 - Publish the already-verified Base44 editor version so the public Plan-it UI
-  exposes the unified/named choice, named guest prefill, and host link recovery.
+  exposes named invitations and the shared `/world/{slug}` iframe handoff.
 - **Git identity.** Commits so far used a local `user.email` on the
   worktrees because the repo had none configured. Reconcile before judging if
   commit attribution matters.
@@ -463,6 +465,7 @@ node --experimental-strip-types --test src/integrations/elevenlabs/__tests__/*.t
 
 | Date | Agent | Change |
 |---|---|---|
+| 2026-08-22 | coordination spine | Published Sites version 5 and verified the Base44 editor handoff end to end: create returns `worldUrl`; create success, guest, and host Planet reuse the same app-owned iframe; one RSVP adds state without regenerating; fixtures remain labelled fallbacks. No live Marble credit was used because no hosted key is configured. |
 | 2026-08-22 | coordination spine | Hardened the ElevenLabs booking status route: it now validates the private management token before polling a provider call, with regression coverage. The fixed-number live/mock booking contract is unchanged. |
 | 2026-08-22 | coordination spine | Wired World Labs into the app: one generation per event at creation, 9 new D1 world columns with additive migrations, `GET /api/events/{slug}/world`, and the embeddable `/world/{slug}` canvas (panorama + guest lanterns, planet fallback, no new dependencies). Added the canvas to `/e/{slug}`. 22 new tests; live path verified against a stubbed Marble API. |
 | 2026-08-22 | coordination spine | Live call path: book route dispatches via ElevenLabs adapter, status poll endpoint, manage harness buttons, test-number safety gate. |
